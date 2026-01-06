@@ -5,10 +5,10 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-joyvault_contract = "JoyVau1t111111111111111111111111111111111111"
+joyvault_contract = "8bqnKmrsbNdZHP8p9sCV1oeeRkzkpQbYvxBeFZ2DiXSB"
 
 [programs.localnet]
-joyvault_contract = "JoyVau1t111111111111111111111111111111111111"
+joyvault_contract = "8bqnKmrsbNdZHP8p9sCV1oeeRkzkpQbYvxBeFZ2DiXSB"
 
 [registry]
 url = "https://api.apr.dev"

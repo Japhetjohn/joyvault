@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
-declare_id!("JoyVau1t111111111111111111111111111111111111");
+declare_id!("8bqnKmrsbNdZHP8p9sCV1oeeRkzkpQbYvxBeFZ2DiXSB");
 
 #[program]
 pub mod joyvault_contract {
