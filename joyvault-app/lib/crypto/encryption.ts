@@ -119,3 +119,23 @@ export function base64ToBuffer(base64: string): Uint8Array {
   }
   return bytes
 }
+
+// Simplified API aliases
+export async function encrypt(
+  masterKey: Uint8Array,
+  plaintext: string
+): Promise<{ ciphertext: Uint8Array; nonce: Uint8Array }> {
+  const result = await encryptSecret(masterKey, plaintext)
+  return {
+    ciphertext: result.ciphertext,
+    nonce: result.nonce,
+  }
+}
+
+export async function decrypt(
+  masterKey: Uint8Array,
+  ciphertext: Uint8Array,
+  nonce: Uint8Array
+): Promise<string> {
+  return decryptSecret(masterKey, ciphertext, nonce)
+}

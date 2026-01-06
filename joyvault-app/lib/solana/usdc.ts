@@ -21,8 +21,8 @@ export const USDC_MINT_DEVNET = new PublicKey('Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSza
 // USDC Token Mint (Mainnet)
 export const USDC_MINT_MAINNET = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
 
-// Treasury wallet for USDC payments
-export const TREASURY_WALLET = new PublicKey('YOUR_TREASURY_WALLET_ADDRESS') // Update this
+// Treasury wallet for USDC payments (placeholder - update with actual treasury wallet)
+export const TREASURY_WALLET = new PublicKey('11111111111111111111111111111111')
 
 // Use devnet USDC by default
 export const USDC_MINT = USDC_MINT_DEVNET

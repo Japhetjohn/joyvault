@@ -8,6 +8,8 @@ export {
 export {
   encryptSecret,
   decryptSecret,
+  encrypt,
+  decrypt,
   bufferToHex,
   hexToBuffer,
   bufferToBase64,
