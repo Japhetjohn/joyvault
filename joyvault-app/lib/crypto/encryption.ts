@@ -22,7 +22,7 @@ export async function encryptSecret(
 
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    masterKey,
+    masterKey.buffer as ArrayBuffer,
     { name: 'AES-GCM' },
     false,
     ['encrypt']
@@ -34,10 +34,10 @@ export async function encryptSecret(
   const ciphertextBuffer = await crypto.subtle.encrypt(
     {
       name: 'AES-GCM',
-      iv: nonce,
+      iv: nonce.buffer as ArrayBuffer,
     },
     cryptoKey,
-    plaintextBytes
+    plaintextBytes.buffer as ArrayBuffer
   )
 
   const ciphertext = new Uint8Array(ciphertextBuffer)
@@ -65,7 +65,7 @@ export async function decryptSecret(
 
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    masterKey,
+    masterKey.buffer as ArrayBuffer,
     { name: 'AES-GCM' },
     false,
     ['decrypt']
@@ -75,10 +75,10 @@ export async function decryptSecret(
     const plaintextBuffer = await crypto.subtle.decrypt(
       {
         name: 'AES-GCM',
-        iv: nonce,
+        iv: nonce.buffer as ArrayBuffer,
       },
       cryptoKey,
-      ciphertext
+      ciphertext.buffer as ArrayBuffer
     )
 
     const decoder = new TextDecoder()

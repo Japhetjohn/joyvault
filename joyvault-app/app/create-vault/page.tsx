@@ -79,27 +79,27 @@ export default function CreateVault() {
     <>
       <Header />
       <main className="flex min-h-[calc(100vh-4rem)] flex-col items-center p-6 md:p-12">
-        <div className="max-w-2xl w-full">
+        <div className="max-w-2xl w-full fade-in">
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Create Your Vault</h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <h1 className="text-4xl md:text-5xl font-bold mb-2 gradient-text">Create Your Vault</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>
               Step {step} of 3
             </p>
           </div>
 
           {step === 1 && (
-            <div className="space-y-6">
+            <div className="modern-card space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                   Enter Your Life Phrase
                 </label>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
                   This is a memorable sentence only you know. Example: "John born in Aba mango tree 2003"
                 </p>
                 <textarea
                   value={lifePhrase}
                   onChange={handleLifePhraseChange}
-                  className="w-full h-32 p-4 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-800"
+                  className="modern-input h-32"
                   placeholder="Enter your Life Phrase..."
                 />
               </div>
@@ -137,7 +137,7 @@ export default function CreateVault() {
               <button
                 onClick={handleContinue}
                 disabled={!validation?.isValid}
-                className="w-full py-3 px-6 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
+                className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Continue
               </button>
@@ -145,18 +145,18 @@ export default function CreateVault() {
           )}
 
           {step === 2 && (
-            <div className="space-y-6">
+            <div className="modern-card space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                   Confirm Your Life Phrase
                 </label>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
                   Type your Life Phrase again to confirm
                 </p>
                 <textarea
                   value={confirmPhrase}
                   onChange={(e) => setConfirmPhrase(e.target.value)}
-                  className="w-full h-32 p-4 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-800"
+                  className="modern-input h-32"
                   placeholder="Re-enter your Life Phrase..."
                 />
               </div>
@@ -170,14 +170,14 @@ export default function CreateVault() {
               <div className="flex gap-4">
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 py-3 px-6 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold rounded-lg transition-colors"
+                  className="btn-secondary flex-1"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleContinue}
                   disabled={lifePhrase !== confirmPhrase}
-                  className="flex-1 py-3 px-6 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
+                  className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continue
                 </button>
@@ -187,36 +187,48 @@ export default function CreateVault() {
 
           {step === 3 && (
             <div className="space-y-6">
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-yellow-800 dark:text-yellow-400 mb-3">
-                  ⚠️ CRITICAL WARNING
-                </h2>
-                <div className="text-yellow-800 dark:text-yellow-400 space-y-2">
-                  <p className="font-semibold">
-                    If you forget your Life Phrase, your vault CANNOT be recovered.
-                  </p>
-                  <ul className="list-disc list-inside space-y-1 text-sm">
-                    <li>Not by you</li>
-                    <li>Not by JoyVault</li>
-                    <li>Not by anyone</li>
-                  </ul>
-                  <p className="font-semibold mt-4">
-                    There is NO recovery mechanism. Your Life Phrase is your ONLY access.
-                  </p>
+              <div className="modern-card" style={{
+                background: 'linear-gradient(135deg, rgba(255, 56, 92, 0.1) 0%, rgba(255, 168, 0, 0.1) 100%)',
+                borderColor: 'var(--accent-pink)'
+              }}>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
+                      CRITICAL WARNING
+                    </h2>
+                    <div className="space-y-2" style={{ color: 'var(--text-primary)' }}>
+                      <p className="font-semibold">
+                        If you forget your Life Phrase, your vault CANNOT be recovered.
+                      </p>
+                      <ul className="list-disc list-inside space-y-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        <li>Not by you</li>
+                        <li>Not by JoyVault</li>
+                        <li>Not by anyone</li>
+                      </ul>
+                      <p className="font-semibold mt-4">
+                        There is NO recovery mechanism. Your Life Phrase is your ONLY access.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="flex gap-4">
                 <button
                   onClick={() => setStep(2)}
-                  className="flex-1 py-3 px-6 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold rounded-lg transition-colors"
+                  className="btn-secondary flex-1"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleCreateVault}
                   disabled={isProcessing || !connected}
-                  className="flex-1 py-3 px-6 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
+                  className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isProcessing ? 'Creating Vault...' : !connected ? 'Connect Wallet First' : 'I Understand, Create Vault'}
                 </button>

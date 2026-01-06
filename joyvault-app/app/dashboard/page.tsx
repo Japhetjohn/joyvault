@@ -125,67 +125,76 @@ export default function Dashboard() {
     <>
       <Header />
       <main className="min-h-[calc(100vh-4rem)] p-6 md:p-12">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto fade-in">
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Your Vault</h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <h1 className="text-4xl md:text-5xl font-bold mb-2 gradient-text">Your Vault</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>
               Wallet: {publicKey?.toBase58().slice(0, 8)}...
               {publicKey?.toBase58().slice(-8)}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <div className="modern-card">
+              <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>
                 Current Tier
               </h3>
-              <p className="text-2xl font-bold">
+              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
                 {VaultTier[currentTier]}
               </p>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <div className="modern-card">
+              <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>
                 Secrets Stored
               </h3>
-              <p className="text-2xl font-bold">
+              <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
                 {secrets.length} / {TIER_LIMITS[currentTier]}
               </p>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <div className="modern-card">
+              <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>
                 Status
               </h3>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+              <p className="text-3xl font-bold" style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>
                 Unlocked
               </p>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+          <div className="modern-card">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Secrets</h2>
+              <h2 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Secrets</h2>
               <button
                 onClick={() => setIsAddingSecret(true)}
-                className="py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors"
+                className="btn-primary"
               >
                 + Add Secret
               </button>
             </div>
 
             {isAddingSecret && (
-              <div className="mb-6 p-4 border-2 border-purple-500 rounded-lg">
-                <h3 className="font-semibold mb-4">Add New Secret</h3>
+              <div className="mb-6 modern-card" style={{
+                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(255, 56, 92, 0.05) 100%)',
+                borderColor: 'var(--accent-purple)',
+                borderWidth: '2px'
+              }}>
+                <h3 className="font-bold text-xl mb-4" style={{ color: 'var(--text-primary)' }}>Add New Secret</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Type</label>
+                    <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Type</label>
                     <select
                       value={newSecret.type}
                       onChange={(e) =>
                         setNewSecret({ ...newSecret, type: e.target.value })
                       }
-                      className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900"
+                      className="modern-input"
                     >
                       <option value="password">Password</option>
                       <option value="seed_phrase">Seed Phrase</option>
@@ -196,34 +205,34 @@ export default function Dashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Content</label>
+                    <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Content</label>
                     <textarea
                       value={newSecret.content}
                       onChange={(e) =>
                         setNewSecret({ ...newSecret, content: e.target.value })
                       }
-                      className="w-full h-24 p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900"
+                      className="modern-input h-24"
                       placeholder="Enter secret content..."
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
                       Max 1024 characters
                     </p>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-4">
                     <button
                       onClick={() => {
                         setIsAddingSecret(false)
                         setNewSecret({ type: 'password', content: '' })
                       }}
-                      className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                      className="btn-secondary flex-1"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleAddSecret}
                       disabled={!newSecret.content.trim()}
-                      className="flex-1 py-2 px-4 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                      className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Encrypt & Save
                     </button>
@@ -233,7 +242,7 @@ export default function Dashboard() {
             )}
 
             {secrets.length === 0 ? (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-12" style={{ color: 'var(--text-secondary)' }}>
                 <p className="text-lg">No secrets stored yet</p>
                 <p className="text-sm mt-2">Click "Add Secret" to get started</p>
               </div>
@@ -242,33 +251,36 @@ export default function Dashboard() {
                 {secrets.map((secret) => (
                   <div
                     key={secret.id}
-                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                    className="secret-card"
                   >
-                    <div className="flex justify-between items-start mb-2">
+                    <div className="flex justify-between items-start mb-3">
                       <div>
-                        <span className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold rounded">
+                        <span className="tier-badge">
                           {secret.type.replace('_', ' ').toUpperCase()}
                         </span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-3">
                         {secret.encrypted ? (
                           <button
                             onClick={() => handleDecrypt(secret)}
-                            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                            className="text-sm font-semibold hover:underline"
+                            style={{ color: 'var(--accent-blue)' }}
                           >
                             Decrypt
                           </button>
                         ) : (
                           <button
                             onClick={() => handleHide(secret)}
-                            className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
+                            className="text-sm font-semibold hover:underline"
+                            style={{ color: 'var(--text-secondary)' }}
                           >
                             Hide
                           </button>
                         )}
                         <button
                           onClick={() => handleDelete(secret.id)}
-                          className="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                          className="text-sm font-semibold hover:underline"
+                          style={{ color: 'var(--accent-pink)' }}
                         >
                           Delete
                         </button>
@@ -277,12 +289,15 @@ export default function Dashboard() {
 
                     <div className="mt-3">
                       {secret.encrypted ? (
-                        <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-                          🔒 Encrypted
-                        </p>
+                        <div className="flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 11h14a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z" />
+                          </svg>
+                          <p className="text-sm font-mono">Encrypted</p>
+                        </div>
                       ) : (
-                        <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700">
-                          <p className="text-sm font-mono break-all">
+                        <div className="modern-card" style={{ background: 'rgba(139, 92, 246, 0.05)' }}>
+                          <p className="text-sm font-mono break-all" style={{ color: 'var(--text-primary)' }}>
                             {secret.plaintext}
                           </p>
                         </div>
@@ -294,13 +309,14 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="mt-6 text-center">
+          <div className="mt-8 text-center">
             <button
               onClick={() => {
                 sessionStorage.clear()
                 router.push('/')
               }}
-              className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+              className="text-sm font-semibold hover:underline"
+              style={{ color: 'var(--text-secondary)' }}
             >
               Lock Vault & Exit
             </button>

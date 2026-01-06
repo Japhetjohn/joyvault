@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js'
 
 export async function deriveVaultSeed(masterKey: Uint8Array): Promise<Uint8Array> {
-  const hashBuffer = await crypto.subtle.digest('SHA-256', masterKey)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', masterKey.buffer as ArrayBuffer)
   return new Uint8Array(hashBuffer)
 }
 

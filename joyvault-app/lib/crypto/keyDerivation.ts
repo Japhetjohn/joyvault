@@ -1,12 +1,6 @@
-import argon2 from 'argon2-browser'
-
-const ARGON2_PARAMS = {
-  time: 3,
-  mem: 65536,
-  hashLen: 32,
-  parallelism: 1,
-  type: argon2.ArgonType.Argon2id,
-}
+// Use Web Crypto API for key derivation (PBKDF2)
+const PBKDF2_ITERATIONS = 600000 // High iteration count for security (matches OWASP recommendations)
+const KEY_LENGTH = 256 // 256 bits = 32 bytes
 
 const APP_SALT = 'JoyVault-v1-2026'
 
@@ -27,15 +21,35 @@ export async function deriveKeyFromLifePhrase(
   const saltBytes = encoder.encode(APP_SALT)
 
   try {
-    const result = await argon2.hash({
-      pass: phraseBytes,
-      salt: saltBytes,
-      ...ARGON2_PARAMS,
-    })
+    // Import the password as a CryptoKey
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      phraseBytes.buffer as ArrayBuffer,
+      'PBKDF2',
+      false,
+      ['deriveBits']
+    )
+
+    // Derive key using PBKDF2
+    const derivedBits = await crypto.subtle.deriveBits(
+      {
+        name: 'PBKDF2',
+        salt: saltBytes.buffer as ArrayBuffer,
+        iterations: PBKDF2_ITERATIONS,
+        hash: 'SHA-256',
+      },
+      keyMaterial,
+      KEY_LENGTH
+    )
+
+    const masterKey = new Uint8Array(derivedBits)
+    const hashHex = Array.from(masterKey)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
 
     return {
-      masterKey: result.hash,
-      hashHex: result.hashHex,
+      masterKey,
+      hashHex,
     }
   } catch (error) {
     throw new Error(`Key derivation failed: ${error}`)
