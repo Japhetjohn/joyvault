@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import Header from '@/components/Header'
 import { deriveKeyFromLifePhrase } from '@/lib/crypto'
+import { useVault } from '@/lib/hooks/useVault'
 
 export default function UnlockVault() {
   const router = useRouter()
   const { connected } = useWallet()
+  const { getVault, loading } = useVault()
   const [lifePhrase, setLifePhrase] = useState('')
   const [isUnlocking, setIsUnlocking] = useState(false)
   const [error, setError] = useState('')
@@ -28,15 +30,27 @@ export default function UnlockVault() {
     setError('')
 
     try {
+      // Derive master key from Life Phrase
       const derived = await deriveKeyFromLifePhrase(lifePhrase)
 
+      // Check if vault exists on-chain
+      const vault = await getVault(derived.masterKey)
+
+      if (!vault) {
+        setError('No vault found for this Life Phrase. Please create a vault first.')
+        setIsUnlocking(false)
+        return
+      }
+
+      // Store master key hash for session
       sessionStorage.setItem('masterKeyHex', derived.hashHex)
       sessionStorage.setItem('vaultInitialized', 'true')
 
+      // Redirect to dashboard
       router.push('/dashboard')
     } catch (err) {
       console.error('Failed to unlock vault:', err)
-      setError('Failed to derive key. Please check your Life Phrase.')
+      setError(err instanceof Error ? err.message : 'Failed to unlock vault. Please check your Life Phrase.')
     } finally {
       setIsUnlocking(false)
     }
@@ -96,13 +110,13 @@ export default function UnlockVault() {
 
             <button
               onClick={handleUnlock}
-              disabled={isUnlocking || !connected}
+              disabled={isUnlocking || loading || !connected}
               className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isUnlocking ? (
+              {isUnlocking || loading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="spinner w-5 h-5 border-2"></div>
-                  <span>Deriving Key...</span>
+                  <span>{loading ? 'Verifying Vault...' : 'Deriving Key...'}</span>
                 </div>
               ) : !connected ? (
                 'Connect Wallet First'

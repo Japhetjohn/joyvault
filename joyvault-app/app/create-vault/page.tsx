@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import Header from '@/components/Header'
 import { validateLifePhrase, deriveKeyFromLifePhrase } from '@/lib/crypto'
+import { useVault } from '@/lib/hooks/useVault'
 
 export default function CreateVault() {
   const router = useRouter()
   const { connected } = useWallet()
+  const { createVault, loading, error } = useVault()
   const [step, setStep] = useState(1)
   const [lifePhrase, setLifePhrase] = useState('')
   const [confirmPhrase, setConfirmPhrase] = useState('')
@@ -47,15 +49,25 @@ export default function CreateVault() {
 
     setIsProcessing(true)
     try {
+      // Derive master key from Life Phrase
       const derived = await deriveKeyFromLifePhrase(lifePhrase)
 
-      sessionStorage.setItem('masterKeyHex', derived.hashHex)
-      sessionStorage.setItem('vaultInitialized', 'true')
+      // Create vault on-chain
+      const success = await createVault(derived.masterKey)
 
-      router.push('/dashboard')
-    } catch (error) {
-      console.error('Failed to create vault:', error)
-      alert('Failed to create vault. Please try again.')
+      if (success) {
+        // Store master key hash for session
+        sessionStorage.setItem('masterKeyHex', derived.hashHex)
+        sessionStorage.setItem('vaultInitialized', 'true')
+
+        // Redirect to dashboard
+        router.push('/dashboard')
+      } else {
+        alert(error || 'Failed to create vault. Please try again.')
+      }
+    } catch (err) {
+      console.error('Failed to create vault:', err)
+      alert(err instanceof Error ? err.message : 'Failed to create vault. Please try again.')
     } finally {
       setIsProcessing(false)
     }
@@ -222,15 +234,16 @@ export default function CreateVault() {
                 <button
                   onClick={() => setStep(2)}
                   className="btn-secondary flex-1"
+                  disabled={loading || isProcessing}
                 >
                   Back
                 </button>
                 <button
                   onClick={handleCreateVault}
-                  disabled={isProcessing || !connected}
+                  disabled={loading || isProcessing || !connected}
                   className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isProcessing ? 'Creating Vault...' : !connected ? 'Connect Wallet First' : 'I Understand, Create Vault'}
+                  {loading || isProcessing ? 'Creating Vault...' : !connected ? 'Connect Wallet First' : 'I Understand, Create Vault'}
                 </button>
               </div>
             </div>
