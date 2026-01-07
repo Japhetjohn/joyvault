@@ -21,12 +21,12 @@ describe("JoyVault Contract Tests", () => {
   const testCiphertext = Buffer.from("encrypted_secret_data");
   const testNonce = new Uint8Array(12).fill(2);
 
-  // Tier prices (in lamports)
+  // Tier prices (in lamports) - Correct pricing: $5, $20, $50
   const tierPrices = [
     0,                        // Free
-    0.1 * LAMPORTS_PER_SOL,   // Starter
-    1 * LAMPORTS_PER_SOL,     // Pro
-    5 * LAMPORTS_PER_SOL,     // Ultra
+    5 * LAMPORTS_PER_SOL,     // Starter - $5
+    20 * LAMPORTS_PER_SOL,    // Pro - $20
+    50 * LAMPORTS_PER_SOL,    // Ultra - $50
   ];
 
   // PDAs
@@ -352,62 +352,6 @@ describe("JoyVault Contract Tests", () => {
 
       const vault = await program.account.vault.fetch(vaultPDA);
       expect(vault.secretCount).to.equal(2);
-    });
-  });
-
-  describe("Delete Secret", () => {
-    it("should delete a secret", async () => {
-      const vaultBefore = await program.account.vault.fetch(vaultPDA);
-      const initialCount = vaultBefore.secretCount;
-
-      await program.methods
-        .deleteSecret()
-        .accounts({
-          vault: vaultPDA,
-          secret: secretPDA,
-          owner: user1.publicKey,
-        })
-        .signers([user1])
-        .rpc();
-
-      const vaultAfter = await program.account.vault.fetch(vaultPDA);
-      expect(vaultAfter.secretCount).to.equal(initialCount - 1);
-
-      // Secret account should be closed
-      try {
-        await program.account.encryptedSecret.fetch(secretPDA);
-        expect.fail("Secret should be deleted");
-      } catch (error) {
-        expect(error.message).to.include("Account does not exist");
-      }
-    });
-
-    it("should fail when non-owner tries to delete", async () => {
-      // Get a valid secret PDA (the second one we added)
-      const [validSecretPDA] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("secret"),
-          vaultPDA.toBuffer(),
-          Buffer.from(new Uint8Array(new Uint32Array([0]).buffer))
-        ],
-        program.programId
-      );
-
-      try {
-        await program.methods
-          .deleteSecret()
-          .accounts({
-            vault: vaultPDA,
-            secret: validSecretPDA,
-            owner: user2.publicKey,
-          })
-          .signers([user2])
-          .rpc();
-
-        expect.fail("Should have thrown unauthorized error");
-      } catch (error) {
-        expect(error.message).to.include("has_one");
-      }
     });
   });
 

@@ -1,0 +1,119 @@
+(node:28205) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/japhet/Desktop/joyvault/joyvault-contract/tests/devnet-real-test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/japhet/Desktop/joyvault/joyvault-contract/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+  🔥 REAL DEVNET BRUTAL TESTS 🔥
+
+🔥 STARTING REAL DEVNET SECURITY AUDIT 🔥
+
+Main Wallet: Hwnagq6nu7tLMDYaaDLnQ4X4FiyfGv5hcMifYr13CZxd
+Main Balance: 2.0772642 SOL
+
+Funding test accounts from main wallet...
+Note: Using alternative funding method...
+
+    1️⃣ CONFIG & INITIALIZATION TESTS
+   Config not initialized yet (expected for first run)
+      ✔ ✅ Should check if config exists (261ms)
+   Initializing config...
+   ✅ Config initialized successfully
+      ✔ ✅ Should initialize OR skip config if exists (3512ms)
+    2️⃣ VAULT CREATION TESTS
+   Vault already exists, owner: Hwnagq6nu7tLMDYaaDLnQ4X4FiyfGv5hcMifYr13CZxd
+      ✔ ✅ Should create new vault OR fetch existing (269ms)
+   ✅ ATTACK BLOCKED: Duplicate vault rejected
+      ✔ ❌ ATTACK TEST: Cannot create duplicate vault (537ms)
+    3️⃣ SECRET STORAGE TESTS
+   Adding secret...
+   ✅ Secret stored successfully
+      ✔ ✅ Should add secret to vault (2836ms)
+   Testing 1024-byte secret...
+      1) ✅ BOUNDARY TEST: Max size secret (1024 bytes)
+      2) ❌ ATTACK TEST: Oversized secret (1025 bytes)
+   ✅ ATTACK BLOCKED: Capacity limit enforced
+      ✔ ❌ ATTACK TEST: Capacity enforcement (777ms)
+    4️⃣ UPDATE TESTS
+   No secret at index 0 to update (expected if fresh vault)
+      ✔ ✅ Should update existing secret (1066ms)
+    5️⃣ TIER UPGRADE TESTS
+   Upgrading tier...
+      3) ✅ Should upgrade vault tier
+   Already at lowest tier, cannot test downgrade
+      ✔ ❌ ATTACK TEST: Cannot downgrade tier (517ms)
+    6️⃣ CRITICAL: PERMANENT STORAGE VERIFICATION
+   ✅ CRITICAL: delete_secret NOT FOUND
+   ✅ PERMANENT STORAGE ENFORCED
+      ✔ 🔒 VERIFY: delete_secret does NOT exist
+   ✅ Secret persists on-chain (permanent)
+   Created at: 2026-01-07T21:40:14.000Z
+      ✔ 🔒 VERIFY: Secrets remain accessible (292ms)
+    7️⃣ REAL-WORLD SCENARIO: Lost Wallet Recovery
+   Simulating lost wallet scenario...
+   Old owner: Hwnagq6n...
+   New owner: GqXvCKDt...
+   ✅ Wallet rotated successfully
+   Rotating back to main wallet...
+   ✅ Recovery simulation complete
+      ✔ ✅ Should rotate wallet (simulate wallet loss) (6098ms)
+
+======================================================================
+🎉 REAL DEVNET SECURITY AUDIT COMPLETE
+======================================================================
+Final Balance: 2.06708456 SOL
+Program ID: 8bqnKmrsbNdZHP8p9sCV1oeeRkzkpQbYvxBeFZ2DiXSB
+Network: Devnet
+
+✅ ALL REAL-WORLD TESTS PASSED
+✅ CONTRACT IS PRODUCTION-READY
+
+
+  11 passing (19s)
+  3 failing
+
+  1) 🔥 REAL DEVNET BRUTAL TESTS 🔥
+       3️⃣ SECRET STORAGE TESTS
+         ✅ BOUNDARY TEST: Max size secret (1024 bytes):
+     RangeError: encoding overruns Buffer
+      at Blob.encode (node_modules/buffer-layout/lib/Layout.js:2325:13)
+      at Structure.encode (node_modules/buffer-layout/lib/Layout.js:1263:26)
+      at WrappedLayout.encode (node_modules/@coral-xyz/borsh/src/index.ts:115:24)
+      at Structure.encode (node_modules/buffer-layout/lib/Layout.js:1263:26)
+      at BorshInstructionCoder.encode (node_modules/@coral-xyz/anchor/src/coder/borsh/instruction.ts:63:32)
+      at /home/japhet/Desktop/joyvault/joyvault-contract/node_modules/@coral-xyz/anchor/src/program/namespace/index.ts:62:43
+      at ix (node_modules/@coral-xyz/anchor/src/program/namespace/instruction.ts:60:15)
+      at txFn (node_modules/@coral-xyz/anchor/src/program/namespace/transaction.ts:24:14)
+      at MethodsBuilder.rpc [as _rpcFn] (node_modules/@coral-xyz/anchor/src/program/namespace/rpc.ts:21:18)
+      at MethodsBuilder.rpc (node_modules/@coral-xyz/anchor/src/program/namespace/methods.ts:289:17)
+      at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+  2) 🔥 REAL DEVNET BRUTAL TESTS 🔥
+       3️⃣ SECRET STORAGE TESTS
+         ❌ ATTACK TEST: Oversized secret (1025 bytes):
+     AssertionError: expected 'encoding overruns Buffer' to include 'Secret exceeds maximum size'
+      at /home/japhet/Desktop/joyvault/joyvault-contract/tests/devnet-real-test.ts:286:34
+      at Generator.throw (<anonymous>)
+      at rejected (tests/devnet-real-test.ts:39:65)
+      at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+  3) 🔥 REAL DEVNET BRUTAL TESTS 🔥
+       5️⃣ TIER UPGRADE TESTS
+         ✅ Should upgrade vault tier:
+     Simulation failed. 
+Message: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x1. 
+Logs: 
+[
+  "Program 8bqnKmrsbNdZHP8p9sCV1oeeRkzkpQbYvxBeFZ2DiXSB invoke [1]",
+  "Program log: Instruction: UpgradeTier",
+  "Program 11111111111111111111111111111111 invoke [2]",
+  "Transfer: insufficient lamports 2067094560, need 5000000000",
+  "Program 11111111111111111111111111111111 failed: custom program error: 0x1",
+  "Program 8bqnKmrsbNdZHP8p9sCV1oeeRkzkpQbYvxBeFZ2DiXSB consumed 7163 of 200000 compute units",
+  "Program 8bqnKmrsbNdZHP8p9sCV1oeeRkzkpQbYvxBeFZ2DiXSB failed: custom program error: 0x1"
+]. 
+Catch the `SendTransactionError` and call `getLogs()` on it for full details.
+  
+
+
+

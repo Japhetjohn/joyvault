@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
 
 declare_id!("8bqnKmrsbNdZHP8p9sCV1oeeRkzkpQbYvxBeFZ2DiXSB");
 
@@ -100,16 +99,6 @@ pub mod joyvault_contract {
         secret.nonce = nonce;
 
         msg!("Secret updated");
-
-        Ok(())
-    }
-
-    /// Delete a secret from the vault
-    pub fn delete_secret(ctx: Context<DeleteSecret>) -> Result<()> {
-        let vault = &mut ctx.accounts.vault;
-        vault.secret_count -= 1;
-
-        msg!("Secret deleted. Remaining: {}", vault.secret_count);
 
         Ok(())
     }
@@ -256,27 +245,6 @@ pub struct UpdateSecret<'info> {
     )]
     pub secret: Account<'info, EncryptedSecret>,
 
-    pub owner: Signer<'info>,
-}
-
-#[derive(Accounts)]
-pub struct DeleteSecret<'info> {
-    #[account(
-        mut,
-        has_one = owner,
-        seeds = [b"vault", vault.vault_seed.as_ref()],
-        bump = vault.bump
-    )]
-    pub vault: Account<'info, Vault>,
-
-    #[account(
-        mut,
-        has_one = vault,
-        close = owner
-    )]
-    pub secret: Account<'info, EncryptedSecret>,
-
-    #[account(mut)]
     pub owner: Signer<'info>,
 }
 
