@@ -117,19 +117,48 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Laptop Image Section */}
+          {/* Laptop Image Section - Animated */}
           <div className="mb-32 relative z-10">
             <div className="relative max-w-6xl mx-auto">
-              <Image
-                src="/laptop.jpeg"
-                alt="JoyVault Dashboard Preview"
-                width={1920}
-                height={1080}
-                className="w-full h-auto rounded-2xl shadow-2xl"
-                priority
-              />
+              {/* Glow effects */}
+              <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-purple-600/30 rounded-3xl blur-3xl opacity-50 animate-pulse"></div>
+
+              {/* Laptop Container */}
+              <div className="relative group">
+                {/* Floating animation wrapper */}
+                <div className="relative transition-transform duration-500 hover:scale-[1.02]">
+                  <Image
+                    src="/laptop.jpeg"
+                    alt="JoyVault Dashboard Preview"
+                    width={1920}
+                    height={1080}
+                    className="w-full h-auto rounded-2xl shadow-2xl border border-gray-800"
+                    priority
+                    style={{
+                      animation: 'float 6s ease-in-out infinite'
+                    }}
+                  />
+                  {/* Shine effect on hover */}
+                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-tr from-transparent via-white/5 to-transparent"></div>
+                </div>
+
+                {/* Corner accents */}
+                <div className="absolute -top-2 -left-2 w-20 h-20 border-t-2 border-l-2 border-purple-500/50 rounded-tl-2xl"></div>
+                <div className="absolute -bottom-2 -right-2 w-20 h-20 border-b-2 border-r-2 border-purple-500/50 rounded-br-2xl"></div>
+              </div>
             </div>
           </div>
+
+          <style jsx>{`
+            @keyframes float {
+              0%, 100% {
+                transform: translateY(0px);
+              }
+              50% {
+                transform: translateY(-10px);
+              }
+            }
+          `}</style>
 
           {/* Footer Section */}
           <footer className="pt-12 pb-8 border-t border-white/10 relative z-10">
