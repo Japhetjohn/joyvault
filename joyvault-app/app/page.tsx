@@ -11,7 +11,6 @@ export default function Home() {
   return (
     <>
       <AnimatedBackground />
-      <Header />
       <main className="min-h-screen flex flex-col items-center justify-center px-6 py-20">
         <div className="max-w-7xl w-full">
           {/* Hero Section */}
@@ -32,8 +31,8 @@ export default function Home() {
 
             {/* Primary CTA */}
             <button
-              onClick={() => router.push('/app')}
-              className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-5 rounded-2xl text-xl font-semibold hover:scale-105 transition-transform duration-200 shadow-2xl hover:shadow-purple-500/50"
+              onClick={() => router.push('/dashboard')}
+              className="inline-flex items-center gap-3 bg-white text-black px-10 py-5 rounded-2xl text-xl font-semibold hover:scale-105 transition-transform duration-200 shadow-2xl"
             >
               Get Started
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,48 +116,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Laptop Image Section - Animated */}
-          <div className="mb-32 relative z-10">
-            <div className="relative max-w-6xl mx-auto">
-              {/* Glow effects */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-purple-600/30 rounded-3xl blur-3xl opacity-50 animate-pulse"></div>
-
-              {/* Laptop Container */}
-              <div className="relative group">
-                {/* Floating animation wrapper */}
-                <div className="relative transition-transform duration-500 hover:scale-[1.02]">
-                  <Image
-                    src="/laptop.jpeg"
-                    alt="JoyVault Dashboard Preview"
-                    width={1920}
-                    height={1080}
-                    className="w-full h-auto rounded-2xl shadow-2xl border border-gray-800"
-                    priority
-                    style={{
-                      animation: 'float 6s ease-in-out infinite'
-                    }}
-                  />
-                  {/* Shine effect on hover */}
-                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-tr from-transparent via-white/5 to-transparent"></div>
-                </div>
-
-                {/* Corner accents */}
-                <div className="absolute -top-2 -left-2 w-20 h-20 border-t-2 border-l-2 border-purple-500/50 rounded-tl-2xl"></div>
-                <div className="absolute -bottom-2 -right-2 w-20 h-20 border-b-2 border-r-2 border-purple-500/50 rounded-br-2xl"></div>
-              </div>
-            </div>
-          </div>
-
-          <style jsx>{`
-            @keyframes float {
-              0%, 100% {
-                transform: translateY(0px);
-              }
-              50% {
-                transform: translateY(-10px);
-              }
-            }
-          `}</style>
 
           {/* Footer Section */}
           <footer className="pt-12 pb-8 border-t border-white/10 relative z-10">
@@ -169,7 +126,7 @@ export default function Home() {
                   href="https://twitter.com/joyvault"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-12 h-12 rounded-lg border border-white/10 flex items-center justify-center hover:border-purple-500/50 hover:bg-purple-500/10 transition-all group"
+                  className="w-12 h-12 rounded-lg border border-white/10 flex items-center justify-center hover:border-white/30 hover:bg-purple-500/10 transition-all group"
                 >
                   <svg className="w-5 h-5 text-gray-400 group-hover:text-purple-400 transition-colors" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />

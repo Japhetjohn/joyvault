@@ -48,14 +48,11 @@ export default function Dashboard() {
     const masterKeyHex = sessionStorage.getItem('masterKeyHex')
     const vaultInitialized = sessionStorage.getItem('vaultInitialized')
 
-    if (!masterKeyHex || !vaultInitialized) {
-      router.push('/')
-      return
+    if (masterKeyHex && vaultInitialized) {
+      const key = hexToBuffer(masterKeyHex)
+      setMasterKey(key)
     }
-
-    const key = hexToBuffer(masterKeyHex)
-    setMasterKey(key)
-  }, [router])
+  }, [])
 
   useEffect(() => {
     if (masterKey && connected) {
@@ -221,33 +218,6 @@ export default function Dashboard() {
     }
   }
 
-  if (!connected) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white border border-gray-200 rounded-3xl p-8 text-center shadow-lg">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-            </svg>
-          </div>
-          <h2 className="text-black font-bold text-xl mb-2">Wallet Required</h2>
-          <p className="text-gray-600 mb-6">
-            Please connect your wallet to access the dashboard
-          </p>
-          <button
-            onClick={() => router.push('/')}
-            className="text-black hover:text-gray-600 transition-colors inline-flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Home
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="flex h-screen bg-white">
       {/* BLACK SIDEBAR - EXACTLY LIKE REFERENCE */}
@@ -260,9 +230,11 @@ export default function Dashboard() {
           <div className="px-8 py-4 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-black">Dashboard</h1>
-              <p className="text-sm text-gray-600 font-mono">
-                {publicKey?.toBase58().slice(0, 8)}...{publicKey?.toBase58().slice(-8)}
-              </p>
+              {connected && publicKey && (
+                <p className="text-sm text-gray-600 font-mono">
+                  {publicKey.toBase58().slice(0, 8)}...{publicKey.toBase58().slice(-8)}
+                </p>
+              )}
             </div>
 
             <div className="flex items-center gap-4">
@@ -273,6 +245,27 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <div className="p-8">
+          {!connected ? (
+            /* CONNECT WALLET UI - SHOWN IN MAIN AREA */
+            <div className="max-w-md mx-auto mt-20">
+              <div className="bg-white border border-gray-200 rounded-3xl p-8 text-center shadow-sm">
+                <div className="w-16 h-16 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-black mb-2">Connect Your Wallet</h2>
+                <p className="text-gray-600 mb-6">
+                  Connect your Solana wallet to access your vault
+                </p>
+                <div className="text-sm text-gray-500">
+                  Click the "Select Wallet" button above to get started
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* DASHBOARD CONTENT */
+            <>
           {/* Stats Cards - WHITE CARDS WITH BLACK TEXT */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {/* Tier Card */}
@@ -422,6 +415,8 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+          </>
+        )}
         </div>
       </div>
 
