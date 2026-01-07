@@ -33,12 +33,12 @@ export enum SecretType {
   Custom = 5,
 }
 
-// Tier Info
+// Tier Info (One-Time Payment)
 export const TIER_INFO = {
   [VaultTier.Free]: { name: 'Free', maxSecrets: 1, price: 0 },
-  [VaultTier.Starter]: { name: 'Starter', maxSecrets: 10, price: 0.1 },
-  [VaultTier.Pro]: { name: 'Pro', maxSecrets: 100, price: 1 },
-  [VaultTier.Ultra]: { name: 'Ultra', maxSecrets: 500, price: 5 },
+  [VaultTier.Starter]: { name: 'Starter', maxSecrets: 10, price: 5 },
+  [VaultTier.Pro]: { name: 'Pro', maxSecrets: 100, price: 20 },
+  [VaultTier.Ultra]: { name: 'Ultra', maxSecrets: 500, price: 50 },
 }
 
 /**
