@@ -40,6 +40,8 @@ export default function Dashboard() {
   const [decryptedSecrets, setDecryptedSecrets] = useState<Set<number>>(new Set())
   const [mounted, setMounted] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [currentView, setCurrentView] = useState<'dashboard' | 'settings'>('dashboard')
+  const [editingSecret, setEditingSecret] = useState<{ index: number; secret: Secret } | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -223,8 +225,11 @@ export default function Dashboard() {
     <div className="flex h-screen bg-white">
       {/* BLACK SIDEBAR - EXACTLY LIKE REFERENCE */}
       <Sidebar
+        onDashboard={() => setCurrentView('dashboard')}
         onAddSecret={() => setIsAddingSecret(true)}
         onUpgrade={() => setShowUpgrade(true)}
+        onSettings={() => setCurrentView('settings')}
+        currentView={currentView}
         mobileMenuOpen={mobileMenuOpen}
         onCloseMobileMenu={() => setMobileMenuOpen(false)}
       />
@@ -246,7 +251,9 @@ export default function Dashboard() {
               </button>
 
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-black">Dashboard</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-black">
+                  {currentView === 'settings' ? 'Settings' : 'Dashboard'}
+                </h1>
                 {connected && publicKey && (
                   <p className="text-xs md:text-sm text-gray-600 font-mono">
                     {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
@@ -278,6 +285,103 @@ export default function Dashboard() {
                 </p>
                 <div className="text-sm text-gray-500">
                   Click the "Select Wallet" button above to get started
+                </div>
+              </div>
+            </div>
+          ) : currentView === 'settings' ? (
+            /* SETTINGS VIEW */
+            <div className="max-w-3xl mx-auto">
+              <div className="bg-white border border-gray-200 rounded-3xl p-6 md:p-8 mb-6">
+                <h2 className="text-2xl font-bold text-black mb-6">Life Phrase Security</h2>
+
+                <div className="space-y-6">
+                  {/* Current Life Phrase Info */}
+                  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-black mb-2">Your Life Phrase</h3>
+                        <p className="text-sm text-gray-600">
+                          This is your master key to access your vault. Never share it with anyone.
+                        </p>
+                      </div>
+                      <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Security Strength Indicator */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">Security Strength</span>
+                        <span className="text-sm font-semibold text-black">Strong</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="h-full bg-black rounded-full transition-all" style={{ width: '80%' }}></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Change Life Phrase Button */}
+                  <button
+                    onClick={() => {
+                      alert('Change Life Phrase functionality coming soon')
+                    }}
+                    className="w-full bg-black text-white px-6 py-4 rounded-xl font-semibold hover:bg-gray-800 transition-colors inline-flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    Change Life Phrase
+                  </button>
+
+                  {/* Security Tips */}
+                  <div className="bg-white border border-gray-200 rounded-2xl p-6">
+                    <h3 className="text-lg font-semibold text-black mb-4">Security Best Practices</h3>
+                    <ul className="space-y-3">
+                      <li className="flex items-start gap-3">
+                        <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-sm text-gray-700">Use at least 6-8 random words (50+ characters)</span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-sm text-gray-700">Avoid common phrases, song lyrics, or quotes</span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-sm text-gray-700">Include numbers and special characters</span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-sm text-gray-700">Never share your Life Phrase with anyone</span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-sm text-gray-700">Store it securely offline if needed</span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
@@ -409,6 +513,16 @@ export default function Dashboard() {
                         </button>
 
                         <button
+                          onClick={() => setEditingSecret({ index, secret })}
+                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                        </button>
+
+                        <button
                           onClick={() => handleDelete(index)}
                           className="p-2 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete"
@@ -428,6 +542,97 @@ export default function Dashboard() {
         )}
         </div>
       </div>
+
+      {/* Upgrade Modal - BLACK AND WHITE */}
+      {showUpgrade && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 md:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl md:text-2xl font-bold text-black">Upgrade Your Vault</h2>
+              <button
+                onClick={() => setShowUpgrade(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Object.values(VaultTier).filter(v => typeof v === 'number').map((tier) => {
+                const tierInfo = TIER_INFO[tier as VaultTier]
+                const isCurrentTier = tier === vaultTier
+                const price = getTierPriceInUsdc(tier as VaultTier)
+
+                return (
+                  <div
+                    key={tier}
+                    className={`border-2 rounded-2xl p-6 transition-all ${
+                      isCurrentTier
+                        ? 'border-black bg-gray-50'
+                        : 'border-gray-200 hover:border-gray-400'
+                    }`}
+                  >
+                    <div className="text-center mb-4">
+                      <h3 className="text-2xl font-bold text-black mb-2">{tierInfo.name}</h3>
+                      <div className="text-3xl font-bold text-black mb-1">
+                        {price === 0 ? 'Free' : `$${price}`}
+                      </div>
+                      {price > 0 && <div className="text-sm text-gray-600">one-time payment</div>}
+                    </div>
+
+                    <ul className="space-y-3 mb-6">
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-gray-700">Up to {tierInfo.maxSecrets} secrets</span>
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-gray-700">AES-256 encryption</span>
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-gray-700">Permanent on-chain storage</span>
+                      </li>
+                      <li className="flex items-center gap-2 text-sm">
+                        <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-gray-700">Access from any wallet</span>
+                      </li>
+                    </ul>
+
+                    <button
+                      onClick={() => {
+                        if (!isCurrentTier && tier as VaultTier > vaultTier) {
+                          handleUpgradeTier(tier as VaultTier)
+                        }
+                      }}
+                      disabled={isCurrentTier || (tier as VaultTier) < vaultTier}
+                      className={`w-full py-3 rounded-xl font-semibold transition-colors ${
+                        isCurrentTier
+                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                          : (tier as VaultTier) < vaultTier
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-black text-white hover:bg-gray-800'
+                      }`}
+                    >
+                      {isCurrentTier ? 'Current Tier' : (tier as VaultTier) < vaultTier ? 'Lower Tier' : 'Upgrade'}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Secret Modal - BLACK AND WHITE */}
       {isAddingSecret && (
@@ -499,6 +704,101 @@ export default function Dashboard() {
                   className="flex-1 bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Adding...' : 'Save Secret'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Secret Modal - BLACK AND WHITE */}
+      {editingSecret && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl md:text-2xl font-bold text-black">Edit Secret</h2>
+              <button
+                onClick={() => setEditingSecret(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-black font-semibold mb-2">Title</label>
+                <input
+                  type="text"
+                  value={editingSecret.secret.title}
+                  onChange={(e) => setEditingSecret({
+                    ...editingSecret,
+                    secret: { ...editingSecret.secret, title: e.target.value }
+                  })}
+                  className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
+                  placeholder="e.g., My Gmail Password"
+                />
+              </div>
+
+              <div>
+                <label className="block text-black font-semibold mb-2">Secret Content</label>
+                <textarea
+                  value={editingSecret.secret.content}
+                  onChange={(e) => setEditingSecret({
+                    ...editingSecret,
+                    secret: { ...editingSecret.secret, content: e.target.value }
+                  })}
+                  className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-black transition-colors resize-none h-32"
+                  placeholder="Enter your secret here..."
+                />
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  onClick={() => setEditingSecret(null)}
+                  className="flex-1 bg-gray-100 text-black font-semibold py-3 rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!masterKey || !editingSecret.secret.title.trim() || !editingSecret.secret.content.trim()) {
+                      alert('Please fill in all fields')
+                      return
+                    }
+
+                    // Delete old secret and add new one
+                    try {
+                      const deleteSuccess = await deleteVaultSecret(masterKey, editingSecret.index)
+                      if (!deleteSuccess) {
+                        alert('Failed to update secret')
+                        return
+                      }
+
+                      const addSuccess = await addVaultSecret(
+                        masterKey,
+                        editingSecret.secret.secretType,
+                        editingSecret.secret.title,
+                        editingSecret.secret.content
+                      )
+
+                      if (addSuccess) {
+                        setEditingSecret(null)
+                        await loadVaultData()
+                      } else {
+                        alert('Failed to update secret')
+                      }
+                    } catch (err) {
+                      console.error('Failed to update secret:', err)
+                      alert(err instanceof Error ? err.message : 'Failed to update secret')
+                    }
+                  }}
+                  disabled={loading || !editingSecret.secret.title.trim() || !editingSecret.secret.content.trim()}
+                  className="flex-1 bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </div>
