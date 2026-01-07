@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
+import Image from 'next/image'
 
 export default function Home() {
   const router = useRouter()
@@ -12,81 +13,103 @@ export default function Home() {
       <main className="min-h-screen flex flex-col items-center justify-center px-6 py-20">
         <div className="max-w-7xl w-full">
           {/* Hero Section */}
-          <div className="text-center mb-32 fade-in relative z-10">
-            <h1 className="text-7xl md:text-8xl font-bold mb-8 leading-tight" style={{
+          <div className="text-center mb-20 fade-in relative z-10">
+            <h1 className="text-6xl md:text-8xl font-bold mb-8 leading-tight" style={{
               textShadow: '0 4px 20px rgba(0, 0, 0, 0.8)'
             }}>
               <span className="gradient-text">Your Secrets.</span><br />
               <span style={{ color: '#FFFFFF', fontWeight: 700 }}>On-Chain. Forever.</span>
             </h1>
-            <p className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed" style={{
+            <p className="text-lg md:text-2xl max-w-3xl mx-auto leading-relaxed mb-12" style={{
               color: '#E5E5E5',
               textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)'
             }}>
               Store critical data on Solana blockchain with military-grade encryption.<br />
               Access from anywhere using only your memory. No seed phrases. No recovery keys.
             </p>
+
+            {/* Primary CTA */}
+            <button
+              onClick={() => router.push('/app')}
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-5 rounded-2xl text-xl font-semibold hover:scale-105 transition-transform duration-200 shadow-2xl hover:shadow-purple-500/50"
+            >
+              Get Started
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </button>
           </div>
 
-          {/* Action Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-32 max-w-5xl mx-auto scale-in relative z-10">
-            <button
-              onClick={() => router.push('/create-vault')}
-              className="modern-card glow-on-hover text-left group p-12"
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-xl border-2 border-purple-500/30 flex items-center justify-center group-hover:scale-110 group-hover:border-purple-500 transition-all">
-                  <svg className="w-9 h-9 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                    Create Vault
-                  </h2>
-                </div>
-              </div>
-              <p className="text-lg leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                Set up your memory-based vault with a Life Phrase. Your identity, forever stored in your mind.
-              </p>
-              <div className="mt-6 flex items-center gap-2 text-purple-400 group-hover:gap-4 transition-all">
-                <span className="font-semibold">Get Started</span>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </div>
-            </button>
+          {/* Laptop Mockup Section */}
+          <div className="mb-32 relative z-10">
+            <div className="relative max-w-5xl mx-auto">
+              {/* Glow effect behind laptop */}
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 blur-3xl"></div>
 
-            <button
-              onClick={() => router.push('/unlock-vault')}
-              className="modern-card glow-on-hover text-left group p-12"
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-xl border-2 border-blue-500/30 flex items-center justify-center group-hover:scale-110 group-hover:border-blue-500 transition-all">
-                  <svg className="w-9 h-9 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                  </svg>
+              {/* Laptop Frame */}
+              <div className="relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl p-3 shadow-2xl">
+                {/* Screen */}
+                <div className="bg-black rounded-2xl overflow-hidden border border-gray-700">
+                  {/* App Screenshot/Preview */}
+                  <div className="aspect-[16/10] bg-gradient-to-br from-gray-950 via-black to-gray-950 p-8">
+                    {/* Mock Dashboard UI */}
+                    <div className="h-full flex flex-col gap-4">
+                      {/* Top Bar */}
+                      <div className="flex justify-between items-center pb-4 border-b border-gray-800">
+                        <div className="flex items-center gap-2">
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl"></div>
+                          <span className="text-white font-bold text-lg">JoyVault</span>
+                        </div>
+                        <div className="px-4 py-2 bg-gray-900 rounded-lg border border-gray-700">
+                          <span className="text-gray-400 text-sm">Connected</span>
+                        </div>
+                      </div>
+
+                      {/* Stats Cards */}
+                      <div className="grid grid-cols-3 gap-3 flex-1">
+                        <div className="bg-gray-900/50 backdrop-blur border border-gray-800 rounded-xl p-4">
+                          <div className="text-gray-400 text-xs mb-1">Current Tier</div>
+                          <div className="text-white font-bold text-lg">Free</div>
+                        </div>
+                        <div className="bg-gray-900/50 backdrop-blur border border-gray-800 rounded-xl p-4">
+                          <div className="text-gray-400 text-xs mb-1">Secrets</div>
+                          <div className="text-white font-bold text-lg">0 / 1</div>
+                        </div>
+                        <div className="bg-gray-900/50 backdrop-blur border border-gray-800 rounded-xl p-4">
+                          <div className="text-gray-400 text-xs mb-1">Security</div>
+                          <div className="text-green-400 font-bold text-lg">256-bit</div>
+                        </div>
+                      </div>
+
+                      {/* Main Card */}
+                      <div className="flex-1 bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur border border-purple-500/30 rounded-2xl p-6 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="w-16 h-16 mx-auto mb-3 bg-purple-500/20 rounded-full flex items-center justify-center">
+                            <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                          </div>
+                          <div className="text-white font-semibold">Your secrets are secure</div>
+                          <div className="text-gray-400 text-sm">Encrypted on-chain</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                    Access Vault
-                  </h2>
-                </div>
+
+                {/* Laptop Bottom */}
+                <div className="h-3 bg-gradient-to-b from-gray-800 to-gray-900 rounded-b-2xl"></div>
               </div>
-              <p className="text-lg leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                Unlock your existing vault instantly with your Life Phrase. Access your secrets from anywhere.
-              </p>
-              <div className="mt-6 flex items-center gap-2 text-blue-400 group-hover:gap-4 transition-all">
-                <span className="font-semibold">Unlock Now</span>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
+
+              {/* Base */}
+              <div className="relative mt-2">
+                <div className="h-4 bg-gradient-to-b from-gray-800 to-gray-900 rounded-b-3xl mx-auto" style={{ width: '60%' }}></div>
               </div>
-            </button>
+            </div>
           </div>
 
           {/* Features Section */}
-          <div className="max-w-6xl mx-auto slide-in relative z-10">
+          <div className="max-w-6xl mx-auto slide-in relative z-10 mb-32">
             <div className="text-center mb-16">
               <h2 className="text-5xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
                 Why Choose JoyVault
@@ -142,7 +165,7 @@ export default function Home() {
           </div>
 
           {/* Stats Section */}
-          <div className="mt-32 max-w-4xl mx-auto relative z-10">
+          <div className="mb-32 max-w-4xl mx-auto relative z-10">
             <div className="grid grid-cols-3 gap-8 text-center">
               <div className="fade-in">
                 <div className="text-5xl font-bold gradient-text mb-2">256-bit</div>
@@ -160,7 +183,7 @@ export default function Home() {
           </div>
 
           {/* Footer Section */}
-          <footer className="mt-32 pt-12 pb-8 border-t border-white/10 relative z-10">
+          <footer className="pt-12 pb-8 border-t border-white/10 relative z-10">
             <div className="max-w-6xl mx-auto">
               {/* Social Links */}
               <div className="flex justify-center gap-6 mb-8">
