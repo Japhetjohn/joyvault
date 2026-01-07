@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
+import AnimatedBackground from '@/components/AnimatedBackground'
 import Image from 'next/image'
 
 export default function Home() {
@@ -9,6 +10,7 @@ export default function Home() {
 
   return (
     <>
+      <AnimatedBackground />
       <Header />
       <main className="min-h-screen flex flex-col items-center justify-center px-6 py-20">
         <div className="max-w-7xl w-full">
@@ -40,73 +42,6 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Laptop Mockup Section */}
-          <div className="mb-32 relative z-10">
-            <div className="relative max-w-5xl mx-auto">
-              {/* Glow effect behind laptop */}
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 blur-3xl"></div>
-
-              {/* Laptop Frame */}
-              <div className="relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl p-3 shadow-2xl">
-                {/* Screen */}
-                <div className="bg-black rounded-2xl overflow-hidden border border-gray-700">
-                  {/* App Screenshot/Preview */}
-                  <div className="aspect-[16/10] bg-gradient-to-br from-gray-950 via-black to-gray-950 p-8">
-                    {/* Mock Dashboard UI */}
-                    <div className="h-full flex flex-col gap-4">
-                      {/* Top Bar */}
-                      <div className="flex justify-between items-center pb-4 border-b border-gray-800">
-                        <div className="flex items-center gap-2">
-                          <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl"></div>
-                          <span className="text-white font-bold text-lg">JoyVault</span>
-                        </div>
-                        <div className="px-4 py-2 bg-gray-900 rounded-lg border border-gray-700">
-                          <span className="text-gray-400 text-sm">Connected</span>
-                        </div>
-                      </div>
-
-                      {/* Stats Cards */}
-                      <div className="grid grid-cols-3 gap-3 flex-1">
-                        <div className="bg-gray-900/50 backdrop-blur border border-gray-800 rounded-xl p-4">
-                          <div className="text-gray-400 text-xs mb-1">Current Tier</div>
-                          <div className="text-white font-bold text-lg">Free</div>
-                        </div>
-                        <div className="bg-gray-900/50 backdrop-blur border border-gray-800 rounded-xl p-4">
-                          <div className="text-gray-400 text-xs mb-1">Secrets</div>
-                          <div className="text-white font-bold text-lg">0 / 1</div>
-                        </div>
-                        <div className="bg-gray-900/50 backdrop-blur border border-gray-800 rounded-xl p-4">
-                          <div className="text-gray-400 text-xs mb-1">Security</div>
-                          <div className="text-green-400 font-bold text-lg">256-bit</div>
-                        </div>
-                      </div>
-
-                      {/* Main Card */}
-                      <div className="flex-1 bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur border border-purple-500/30 rounded-2xl p-6 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="w-16 h-16 mx-auto mb-3 bg-purple-500/20 rounded-full flex items-center justify-center">
-                            <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
-                          </div>
-                          <div className="text-white font-semibold">Your secrets are secure</div>
-                          <div className="text-gray-400 text-sm">Encrypted on-chain</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Laptop Bottom */}
-                <div className="h-3 bg-gradient-to-b from-gray-800 to-gray-900 rounded-b-2xl"></div>
-              </div>
-
-              {/* Base */}
-              <div className="relative mt-2">
-                <div className="h-4 bg-gradient-to-b from-gray-800 to-gray-900 rounded-b-3xl mx-auto" style={{ width: '60%' }}></div>
-              </div>
-            </div>
-          </div>
 
           {/* Features Section */}
           <div className="max-w-6xl mx-auto slide-in relative z-10 mb-32">
@@ -179,6 +114,20 @@ export default function Home() {
                 <div className="text-5xl font-bold gradient-text mb-2">Forever</div>
                 <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Immutable Data</div>
               </div>
+            </div>
+          </div>
+
+          {/* Laptop Image Section */}
+          <div className="mb-32 relative z-10">
+            <div className="relative max-w-6xl mx-auto">
+              <Image
+                src="/laptop.jpeg"
+                alt="JoyVault Dashboard Preview"
+                width={1920}
+                height={1080}
+                className="w-full h-auto rounded-2xl shadow-2xl"
+                priority
+              />
             </div>
           </div>
 

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { WalletProvider } from '@/components/WalletProvider'
-import AnimatedBackground from '@/components/AnimatedBackground'
 
 export const metadata: Metadata = {
   title: 'JoyVault - Your secrets. On-chain.',
@@ -21,7 +20,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AnimatedBackground />
         <WalletProvider>{children}</WalletProvider>
       </body>
     </html>
