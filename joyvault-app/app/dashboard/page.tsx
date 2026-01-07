@@ -221,7 +221,10 @@ export default function Dashboard() {
   return (
     <div className="flex h-screen bg-white">
       {/* BLACK SIDEBAR - EXACTLY LIKE REFERENCE */}
-      <Sidebar />
+      <Sidebar
+        onAddSecret={() => setIsAddingSecret(true)}
+        onUpgrade={() => setShowUpgrade(true)}
+      />
 
       {/* WHITE MAIN CONTENT - EXACTLY LIKE REFERENCE */}
       <div className="flex-1 overflow-auto">
@@ -267,7 +270,7 @@ export default function Dashboard() {
             /* DASHBOARD CONTENT */
             <>
           {/* Stats Cards - WHITE CARDS WITH BLACK TEXT */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {/* Tier Card */}
             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
               <div className="text-sm text-gray-600 mb-2">Current Tier</div>
@@ -294,15 +297,6 @@ export default function Dashboard() {
                   style={{ width: `${(secretCount / TIER_INFO[vaultTier].maxSecrets) * 100}%` }}
                 />
               </div>
-            </div>
-
-            {/* USDC Balance */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-              <div className="text-sm text-gray-600 mb-2">USDC Balance</div>
-              <div className="text-3xl font-bold text-black mb-2">
-                ${formatUsdc(usdcBalance)}
-              </div>
-              <span className="text-xs text-gray-500">Devnet USDC</span>
             </div>
 
             {/* Security */}
