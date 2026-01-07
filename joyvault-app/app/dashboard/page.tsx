@@ -39,6 +39,7 @@ export default function Dashboard() {
   const [usdcBalance, setUsdcBalance] = useState(0)
   const [decryptedSecrets, setDecryptedSecrets] = useState<Set<number>>(new Set())
   const [mounted, setMounted] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -224,20 +225,34 @@ export default function Dashboard() {
       <Sidebar
         onAddSecret={() => setIsAddingSecret(true)}
         onUpgrade={() => setShowUpgrade(true)}
+        mobileMenuOpen={mobileMenuOpen}
+        onCloseMobileMenu={() => setMobileMenuOpen(false)}
       />
 
       {/* WHITE MAIN CONTENT - EXACTLY LIKE REFERENCE */}
       <div className="flex-1 overflow-auto">
         {/* Header */}
         <div className="border-b border-gray-200 bg-white sticky top-0 z-10">
-          <div className="px-8 py-4 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-black">Dashboard</h1>
-              {connected && publicKey && (
-                <p className="text-sm text-gray-600 font-mono">
-                  {publicKey.toBase58().slice(0, 8)}...{publicKey.toBase58().slice(-8)}
-                </p>
-              )}
+          <div className="px-4 md:px-8 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {/* Hamburger Menu Button - Mobile Only */}
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-black">Dashboard</h1>
+                {connected && publicKey && (
+                  <p className="text-xs md:text-sm text-gray-600 font-mono">
+                    {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-4">
@@ -247,10 +262,10 @@ export default function Dashboard() {
         </div>
 
         {/* Main Content */}
-        <div className="p-8">
+        <div className="p-4 md:p-8">
           {!connected ? (
             /* CONNECT WALLET UI - SHOWN IN MAIN AREA */
-            <div className="max-w-md mx-auto mt-20">
+            <div className="max-w-md mx-auto mt-8 md:mt-20">
               <div className="bg-white border border-gray-200 rounded-3xl p-8 text-center shadow-sm">
                 <div className="w-16 h-16 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
                   <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -417,9 +432,9 @@ export default function Dashboard() {
       {/* Add Secret Modal - BLACK AND WHITE */}
       {isAddingSecret && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white border border-gray-200 rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-black">Add New Secret</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-black">Add New Secret</h2>
               <button
                 onClick={() => setIsAddingSecret(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -433,7 +448,7 @@ export default function Dashboard() {
             <div className="space-y-6">
               <div>
                 <label className="block text-black font-semibold mb-3">Secret Type</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {Object.values(SecretType).filter(v => typeof v === 'number').map((type) => (
                     <button
                       key={type}
