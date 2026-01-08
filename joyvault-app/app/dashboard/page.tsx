@@ -6,8 +6,8 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { hexToBuffer, deriveKeyFromLifePhrase } from '@/lib/crypto'
 import { useVault, Secret } from '@/lib/hooks/useVault'
-import { VaultTier, SecretType, TIER_INFO } from '@/lib/solana/program'
-import { payWithUsdc, getTierPriceInUsdc, formatUsdc, getUsdcBalance } from '@/lib/solana/usdc'
+import { VaultTier, SecretType, TIER_INFO, getConnection } from '@/lib/solana/program'
+import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import Sidebar from '@/components/Sidebar'
 
 export default function Dashboard() {
@@ -21,6 +21,7 @@ export default function Dashboard() {
     addVaultSecret,
     deleteVaultSecret,
     upgradeVaultTier,
+    createVault,
     loading,
     error
   } = useVault()
@@ -36,7 +37,7 @@ export default function Dashboard() {
     content: ''
   })
   const [showUpgrade, setShowUpgrade] = useState(false)
-  const [usdcBalance, setUsdcBalance] = useState(0)
+  const [solBalance, setSolBalance] = useState(0)
   const [decryptedSecrets, setDecryptedSecrets] = useState<Set<number>>(new Set())
   const [mounted, setMounted] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -68,7 +69,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (publicKey) {
-      loadUsdcBalance()
+      loadSolBalance()
     }
   }, [publicKey])
 
@@ -89,13 +90,14 @@ export default function Dashboard() {
     }
   }
 
-  const loadUsdcBalance = async () => {
+  const loadSolBalance = async () => {
     if (!publicKey) return
     try {
-      const balance = await getUsdcBalance(publicKey)
-      setUsdcBalance(balance)
+      const connection = getConnection()
+      const balance = await connection.getBalance(publicKey)
+      setSolBalance(balance / LAMPORTS_PER_SOL)
     } catch (err) {
-      console.error('Failed to load USDC balance:', err)
+      console.error('Failed to load SOL balance:', err)
     }
   }
 
@@ -222,24 +224,22 @@ export default function Dashboard() {
       return
     }
 
-    const price = getTierPriceInUsdc(newTier)
+    const tierPrice = TIER_INFO[newTier].price
 
-    if (price > 0) {
-      const paymentResult = await payWithUsdc(wallet, newTier)
-
-      if (!paymentResult.success) {
-        alert(paymentResult.error || 'Payment failed')
-        return
-      }
+    // Check SOL balance
+    if (tierPrice > 0 && solBalance < tierPrice) {
+      alert(`Insufficient SOL balance. You have ${solBalance.toFixed(2)} SOL but need ${tierPrice} SOL`)
+      return
     }
 
     try {
+      // The smart contract handles payment automatically during tier upgrade
       const success = await upgradeVaultTier(masterKey, newTier)
 
       if (success) {
         setShowUpgrade(false)
         await loadVaultData()
-        await loadUsdcBalance()
+        await loadSolBalance()
         alert(`Successfully upgraded to ${TIER_INFO[newTier].name} tier!`)
       } else {
         alert(error || 'Failed to upgrade tier')
@@ -663,7 +663,7 @@ export default function Dashboard() {
               {Object.values(VaultTier).filter(v => typeof v === 'number').map((tier) => {
                 const tierInfo = TIER_INFO[tier as VaultTier]
                 const isCurrentTier = tier === vaultTier
-                const price = getTierPriceInUsdc(tier as VaultTier)
+                const price = tierInfo.price
 
                 return (
                   <div
@@ -677,7 +677,7 @@ export default function Dashboard() {
                     <div className="text-center mb-4">
                       <h3 className="text-2xl font-bold text-black mb-2">{tierInfo.name}</h3>
                       <div className="text-3xl font-bold text-black mb-1">
-                        {price === 0 ? 'Free' : `$${price}`}
+                        {price === 0 ? 'Free' : `${price} SOL`}
                       </div>
                       {price > 0 && <div className="text-sm text-gray-600">one-time payment</div>}
                     </div>

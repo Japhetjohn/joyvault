@@ -6,9 +6,9 @@ export const metadata: Metadata = {
   title: 'JoyVault - Your secrets. On-chain.',
   description: 'On-chain encrypted vault where users store secrets using only their memory',
   icons: {
-    icon: '/logo.png',
-    shortcut: '/logo.png',
-    apple: '/logo.png',
+    icon: '/logo.jpeg',
+    shortcut: '/logo.jpeg',
+    apple: '/logo.jpeg',
   },
 }
 

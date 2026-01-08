@@ -1,15 +1,13 @@
 import {
   Connection,
   PublicKey,
-  Transaction,
-  SystemProgram,
   LAMPORTS_PER_SOL,
-  TransactionInstruction,
 } from '@solana/web3.js'
-import { AnchorProvider, Program, Idl, BN } from '@coral-xyz/anchor'
+import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor'
 import { WalletContextState } from '@solana/wallet-adapter-react'
+import IDL from './joyvault_contract.json'
 
-// Program ID (update after deployment)
+// Program ID
 export const PROGRAM_ID = new PublicKey('8bqnKmrsbNdZHP8p9sCV1oeeRkzkpQbYvxBeFZ2DiXSB')
 
 // RPC Endpoint
@@ -46,6 +44,22 @@ export const TIER_INFO = {
  */
 export function getConnection(): Connection {
   return new Connection(RPC_ENDPOINT, 'confirmed')
+}
+
+/**
+ * Get Anchor program instance
+ */
+export function getProgram(wallet: WalletContextState) {
+  const connection = getConnection()
+
+  // Create a dummy wallet if no wallet connected (for read-only operations)
+  const provider = new AnchorProvider(
+    connection,
+    wallet as any,
+    { commitment: 'confirmed' }
+  )
+
+  return new Program(IDL as any, provider)
 }
 
 /**
@@ -89,6 +103,7 @@ export async function initializeVault(
     throw new Error('Wallet not connected')
   }
 
+  const program = getProgram(wallet)
   const connection = getConnection()
   const [vaultPDA] = deriveVaultPDA(vaultSeed)
 
@@ -98,29 +113,19 @@ export async function initializeVault(
     throw new Error('Vault already exists for this Life Phrase')
   }
 
-  // Create instruction
-  const instruction = new TransactionInstruction({
-    programId: PROGRAM_ID,
-    keys: [
-      { pubkey: vaultPDA, isSigner: false, isWritable: true },
-      { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
-      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    ],
-    data: Buffer.from([
-      1, // instruction index for initialize_vault
-      ...Array.from(vaultSeed),
-    ]),
-  })
+  // Convert vaultSeed to array format for Anchor
+  const vaultSeedArray = Array.from(vaultSeed)
 
-  const transaction = new Transaction().add(instruction)
-  transaction.feePayer = wallet.publicKey
-  transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+  const tx = await program.methods
+    .initializeVault(vaultSeedArray)
+    .accounts({
+      vault: vaultPDA,
+      owner: wallet.publicKey,
+      systemProgram: web3.SystemProgram.programId,
+    })
+    .rpc()
 
-  const signed = await wallet.signTransaction(transaction)
-  const signature = await connection.sendRawTransaction(signed.serialize())
-  await connection.confirmTransaction(signature, 'confirmed')
-
-  return signature
+  return tx
 }
 
 /**
@@ -138,11 +143,22 @@ export async function fetchVault(vaultSeed: Uint8Array): Promise<{
     const vaultInfo = await connection.getAccountInfo(vaultPDA)
     if (!vaultInfo) return null
 
-    // Parse vault data (simplified - adjust based on actual layout)
+    // Parse vault data using Anchor's account layout
     const data = vaultInfo.data
+
+    // Anchor discriminator (8 bytes) + owner (32 bytes) + vault_seed (32 bytes) + tier (1 byte) + secret_count (4 bytes) + bump (1 byte)
     const owner = new PublicKey(data.slice(8, 40))
-    const tier = data[72] as VaultTier
+    // vault_seed is at 40-72 (we skip it)
+    const tierByte = data[72]
     const secretCount = data.readUInt32LE(73)
+
+    // Map tier byte to enum
+    let tier: VaultTier
+    if (tierByte === 0) tier = VaultTier.Free
+    else if (tierByte === 1) tier = VaultTier.Starter
+    else if (tierByte === 2) tier = VaultTier.Pro
+    else if (tierByte === 3) tier = VaultTier.Ultra
+    else tier = VaultTier.Free
 
     return { owner, tier, secretCount }
   } catch (error) {
@@ -165,7 +181,7 @@ export async function addSecret(
     throw new Error('Wallet not connected')
   }
 
-  const connection = getConnection()
+  const program = getProgram(wallet)
   const [vaultPDA] = deriveVaultPDA(vaultSeed)
 
   // Get current secret count
@@ -176,35 +192,30 @@ export async function addSecret(
 
   const [secretPDA] = deriveSecretPDA(vaultPDA, vault.secretCount)
 
-  // Create instruction data
-  const instructionData = Buffer.concat([
-    Buffer.from([2]), // instruction index for add_secret
-    Buffer.from([secretType]),
-    Buffer.from(new Uint32Array([ciphertext.length]).buffer),
-    Buffer.from(ciphertext),
-    Buffer.from(nonce),
-  ])
+  // Convert secret type to Anchor enum format
+  let secretTypeEnum
+  if (secretType === SecretType.Password) secretTypeEnum = { password: {} }
+  else if (secretType === SecretType.ApiKey) secretTypeEnum = { apiKey: {} }
+  else if (secretType === SecretType.SeedPhrase) secretTypeEnum = { seedPhrase: {} }
+  else if (secretType === SecretType.PrivateKey) secretTypeEnum = { privateKey: {} }
+  else if (secretType === SecretType.Note) secretTypeEnum = { note: {} }
+  else secretTypeEnum = { custom: {} }
 
-  const instruction = new TransactionInstruction({
-    programId: PROGRAM_ID,
-    keys: [
-      { pubkey: vaultPDA, isSigner: false, isWritable: true },
-      { pubkey: secretPDA, isSigner: false, isWritable: true },
-      { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
-      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    ],
-    data: instructionData,
-  })
+  const tx = await program.methods
+    .addSecret(
+      secretTypeEnum,
+      Buffer.from(ciphertext),
+      Array.from(nonce)
+    )
+    .accounts({
+      vault: vaultPDA,
+      secret: secretPDA,
+      owner: wallet.publicKey,
+      systemProgram: web3.SystemProgram.programId,
+    })
+    .rpc()
 
-  const transaction = new Transaction().add(instruction)
-  transaction.feePayer = wallet.publicKey
-  transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
-
-  const signed = await wallet.signTransaction(transaction)
-  const signature = await connection.sendRawTransaction(signed.serialize())
-  await connection.confirmTransaction(signature, 'confirmed')
-
-  return signature
+  return tx
 }
 
 /**
@@ -221,73 +232,34 @@ export async function updateSecret(
     throw new Error('Wallet not connected')
   }
 
-  const connection = getConnection()
+  const program = getProgram(wallet)
   const [vaultPDA] = deriveVaultPDA(vaultSeed)
   const [secretPDA] = deriveSecretPDA(vaultPDA, secretIndex)
 
-  const instructionData = Buffer.concat([
-    Buffer.from([3]), // instruction index for update_secret
-    Buffer.from(new Uint32Array([ciphertext.length]).buffer),
-    Buffer.from(ciphertext),
-    Buffer.from(nonce),
-  ])
+  const tx = await program.methods
+    .updateSecret(
+      Buffer.from(ciphertext),
+      Array.from(nonce)
+    )
+    .accounts({
+      vault: vaultPDA,
+      secret: secretPDA,
+      owner: wallet.publicKey,
+    })
+    .rpc()
 
-  const instruction = new TransactionInstruction({
-    programId: PROGRAM_ID,
-    keys: [
-      { pubkey: vaultPDA, isSigner: false, isWritable: false },
-      { pubkey: secretPDA, isSigner: false, isWritable: true },
-      { pubkey: wallet.publicKey, isSigner: true, isWritable: false },
-    ],
-    data: instructionData,
-  })
-
-  const transaction = new Transaction().add(instruction)
-  transaction.feePayer = wallet.publicKey
-  transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
-
-  const signed = await wallet.signTransaction(transaction)
-  const signature = await connection.sendRawTransaction(signed.serialize())
-  await connection.confirmTransaction(signature, 'confirmed')
-
-  return signature
+  return tx
 }
 
 /**
- * Delete a secret
+ * Delete a secret (NOTE: This may not exist in the contract anymore)
  */
 export async function deleteSecret(
   wallet: WalletContextState,
   vaultSeed: Uint8Array,
   secretIndex: number
 ): Promise<string> {
-  if (!wallet.publicKey || !wallet.signTransaction) {
-    throw new Error('Wallet not connected')
-  }
-
-  const connection = getConnection()
-  const [vaultPDA] = deriveVaultPDA(vaultSeed)
-  const [secretPDA] = deriveSecretPDA(vaultPDA, secretIndex)
-
-  const instruction = new TransactionInstruction({
-    programId: PROGRAM_ID,
-    keys: [
-      { pubkey: vaultPDA, isSigner: false, isWritable: true },
-      { pubkey: secretPDA, isSigner: false, isWritable: true },
-      { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
-    ],
-    data: Buffer.from([4]), // instruction index for delete_secret
-  })
-
-  const transaction = new Transaction().add(instruction)
-  transaction.feePayer = wallet.publicKey
-  transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
-
-  const signed = await wallet.signTransaction(transaction)
-  const signature = await connection.sendRawTransaction(signed.serialize())
-  await connection.confirmTransaction(signature, 'confirmed')
-
-  return signature
+  throw new Error('Delete secret functionality has been removed from the contract for permanent storage')
 }
 
 /**
@@ -302,36 +274,41 @@ export async function upgradeTier(
     throw new Error('Wallet not connected')
   }
 
+  const program = getProgram(wallet)
   const connection = getConnection()
   const [configPDA] = deriveConfigPDA()
   const [vaultPDA] = deriveVaultPDA(vaultSeed)
 
-  // Get treasury wallet from config (you'll need to fetch this from the config account)
-  // For now, using a placeholder - update after config is initialized
-  const treasuryWallet = new PublicKey('11111111111111111111111111111111')
+  // Fetch config to get treasury wallet
+  const configAccount = await connection.getAccountInfo(configPDA)
+  if (!configAccount) {
+    throw new Error('Global config not initialized')
+  }
 
-  const instruction = new TransactionInstruction({
-    programId: PROGRAM_ID,
-    keys: [
-      { pubkey: configPDA, isSigner: false, isWritable: false },
-      { pubkey: vaultPDA, isSigner: false, isWritable: true },
-      { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
-      { pubkey: wallet.publicKey, isSigner: true, isWritable: false },
-      { pubkey: treasuryWallet, isSigner: false, isWritable: true },
-      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    ],
-    data: Buffer.from([5, newTier]), // instruction index for upgrade_tier + tier
-  })
+  // Parse treasury wallet from config (discriminator 8 bytes + admin 32 bytes + treasury 32 bytes)
+  const treasuryWallet = new PublicKey(configAccount.data.slice(40, 72))
 
-  const transaction = new Transaction().add(instruction)
-  transaction.feePayer = wallet.publicKey
-  transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+  // Convert tier to Anchor enum format
+  let tierEnum
+  if (newTier === VaultTier.Free) tierEnum = { free: {} }
+  else if (newTier === VaultTier.Starter) tierEnum = { starter: {} }
+  else if (newTier === VaultTier.Pro) tierEnum = { pro: {} }
+  else if (newTier === VaultTier.Ultra) tierEnum = { ultra: {} }
+  else tierEnum = { free: {} }
 
-  const signed = await wallet.signTransaction(transaction)
-  const signature = await connection.sendRawTransaction(signed.serialize())
-  await connection.confirmTransaction(signature, 'confirmed')
+  const tx = await program.methods
+    .upgradeTier(tierEnum)
+    .accounts({
+      config: configPDA,
+      vault: vaultPDA,
+      payer: wallet.publicKey,
+      owner: wallet.publicKey,
+      treasury: treasuryWallet,
+      systemProgram: web3.SystemProgram.programId,
+    })
+    .rpc()
 
-  return signature
+  return tx
 }
 
 /**
@@ -346,30 +323,18 @@ export async function rotateWallet(
     throw new Error('Wallet not connected')
   }
 
-  const connection = getConnection()
+  const program = getProgram(wallet)
   const [vaultPDA] = deriveVaultPDA(vaultSeed)
 
-  const instruction = new TransactionInstruction({
-    programId: PROGRAM_ID,
-    keys: [
-      { pubkey: vaultPDA, isSigner: false, isWritable: true },
-      { pubkey: wallet.publicKey, isSigner: true, isWritable: false },
-    ],
-    data: Buffer.concat([
-      Buffer.from([6]), // instruction index for rotate_wallet
-      newOwner.toBuffer(),
-    ]),
-  })
+  const tx = await program.methods
+    .rotateWallet(newOwner)
+    .accounts({
+      vault: vaultPDA,
+      owner: wallet.publicKey,
+    })
+    .rpc()
 
-  const transaction = new Transaction().add(instruction)
-  transaction.feePayer = wallet.publicKey
-  transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
-
-  const signed = await wallet.signTransaction(transaction)
-  const signature = await connection.sendRawTransaction(signed.serialize())
-  await connection.confirmTransaction(signature, 'confirmed')
-
-  return signature
+  return tx
 }
 
 /**
@@ -400,15 +365,27 @@ export async function fetchVaultSecrets(
     try {
       const secretInfo = await connection.getAccountInfo(secretPDA)
       if (secretInfo) {
-        // Parse secret data (simplified - adjust based on actual layout)
+        // Parse secret data
+        // Anchor discriminator (8 bytes) + vault (32 bytes) + secret_type (1 byte) + ciphertext_len (4 bytes) + ciphertext + nonce (12 bytes) + created_at (8 bytes) + bump (1 byte)
         const data = secretInfo.data
-        const secretType = data[40] as SecretType
+        const secretTypeByte = data[40]
         const ciphertextLen = data.readUInt32LE(41)
-        const ciphertext = data.slice(45, 45 + ciphertextLen)
-        const nonce = data.slice(45 + ciphertextLen, 57 + ciphertextLen)
+        // Create new Uint8Arrays to avoid buffer sharing issues
+        const ciphertext = new Uint8Array(data.slice(45, 45 + ciphertextLen))
+        const nonce = new Uint8Array(data.slice(45 + ciphertextLen, 45 + ciphertextLen + 12))
         const createdAt = Number(
           new DataView(data.buffer, data.byteOffset + 57 + ciphertextLen, 8).getBigInt64(0, true)
         )
+
+        // Map secret type byte to enum
+        let secretType: SecretType
+        if (secretTypeByte === 0) secretType = SecretType.Password
+        else if (secretTypeByte === 1) secretType = SecretType.ApiKey
+        else if (secretTypeByte === 2) secretType = SecretType.SeedPhrase
+        else if (secretTypeByte === 3) secretType = SecretType.PrivateKey
+        else if (secretTypeByte === 4) secretType = SecretType.Note
+        else if (secretTypeByte === 5) secretType = SecretType.Custom
+        else secretType = SecretType.Custom
 
         secrets.push({
           index: i,

@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 interface SidebarProps {
   onAddSecret?: () => void
@@ -91,11 +92,13 @@ export default function Sidebar({ onAddSecret, onEditSecret, onUpgrade, onSettin
         <div className="p-6 border-b border-gray-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
+              <Image
+                src="/logo.jpeg"
+                alt="JoyVault Logo"
+                width={40}
+                height={40}
+                className="rounded-lg"
+              />
               <span className="font-bold text-white text-lg">JoyVault</span>
             </div>
 
