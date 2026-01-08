@@ -221,6 +221,41 @@ export default function Dashboard() {
     }
   }
 
+  // Redirect to unlock vault if no master key
+  if (!masterKey && mounted) {
+    return (
+      <div className="flex min-h-screen bg-white items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white border border-gray-200 rounded-3xl p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-black mb-2">🔒 Vault Locked</h1>
+            <p className="text-gray-600">
+              Please create or unlock your vault with your Life Phrase first.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <button
+              onClick={() => router.push('/create-vault')}
+              className="w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors"
+            >
+              Create New Vault
+            </button>
+            <button
+              onClick={() => router.push('/unlock-vault')}
+              className="w-full bg-gray-100 text-black font-semibold py-3 rounded-xl hover:bg-gray-200 transition-colors"
+            >
+              Unlock Existing Vault
+            </button>
+          </div>
+
+          <div className="mt-6 text-center">
+            <WalletMultiButton />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-screen bg-white">
       {/* BLACK SIDEBAR - EXACTLY LIKE REFERENCE */}
