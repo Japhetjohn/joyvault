@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
-import { hexToBuffer } from '@/lib/crypto'
+import { hexToBuffer, deriveKeyFromLifePhrase } from '@/lib/crypto'
 import { useVault, Secret } from '@/lib/hooks/useVault'
 import { VaultTier, SecretType, TIER_INFO } from '@/lib/solana/program'
 import { payWithUsdc, getTierPriceInUsdc, formatUsdc, getUsdcBalance } from '@/lib/solana/usdc'
@@ -42,6 +42,9 @@ export default function Dashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [currentView, setCurrentView] = useState<'dashboard' | 'settings'>('dashboard')
   const [editingSecret, setEditingSecret] = useState<{ index: number; secret: Secret } | null>(null)
+  const [isSettingUpLifePhrase, setIsSettingUpLifePhrase] = useState(false)
+  const [lifePhraseInput, setLifePhraseInput] = useState('')
+  const [lifePhraseError, setLifePhraseError] = useState('')
 
   useEffect(() => {
     setMounted(true)
@@ -96,8 +99,61 @@ export default function Dashboard() {
     }
   }
 
+  const handleSetupLifePhrase = async () => {
+    if (!lifePhraseInput.trim()) {
+      setLifePhraseError('Please enter your Life Phrase')
+      return
+    }
+
+    if (!connected) {
+      setLifePhraseError('Please connect your wallet first')
+      return
+    }
+
+    try {
+      setLifePhraseError('')
+      const derived = await deriveKeyFromLifePhrase(lifePhraseInput)
+
+      // Try to get vault - if it doesn't exist, create it
+      let vault = await getVault(derived.masterKey)
+
+      if (!vault) {
+        // Vault doesn't exist, create it
+        const success = await createVault(derived.masterKey)
+        if (!success) {
+          setLifePhraseError('Failed to create vault. Please try again.')
+          return
+        }
+      }
+
+      // Save to sessionStorage
+      sessionStorage.setItem('masterKeyHex', derived.hashHex)
+      sessionStorage.setItem('vaultInitialized', 'true')
+      setMasterKey(derived.masterKey)
+
+      // Reload vault data
+      await loadVaultData()
+
+      // Close setup modal and go back to dashboard
+      setIsSettingUpLifePhrase(false)
+      setLifePhraseInput('')
+      setCurrentView('dashboard')
+      alert('Life Phrase set successfully! You can now add secrets.')
+    } catch (err) {
+      console.error('Failed to setup Life Phrase:', err)
+      setLifePhraseError(err instanceof Error ? err.message : 'Failed to setup Life Phrase')
+    }
+  }
+
   const handleAddSecret = async () => {
-    if (!masterKey || !newSecret.content.trim() || !newSecret.title.trim()) {
+    if (!masterKey) {
+      alert('Please set up your Life Phrase in Settings first')
+      setCurrentView('settings')
+      setIsSettingUpLifePhrase(true)
+      return
+    }
+
+    if (!newSecret.content.trim() || !newSecret.title.trim()) {
       alert('Please fill in all fields')
       return
     }
@@ -331,18 +387,64 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Change Life Phrase Button */}
-                  <button
-                    onClick={() => {
-                      alert('Change Life Phrase functionality coming soon')
-                    }}
-                    className="w-full bg-black text-white px-6 py-4 rounded-xl font-semibold hover:bg-gray-800 transition-colors inline-flex items-center justify-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                    </svg>
-                    Change Life Phrase
-                  </button>
+                  {/* Set/Change Life Phrase Button */}
+                  {!masterKey || isSettingUpLifePhrase ? (
+                    <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-black">
+                          {masterKey ? 'Change Life Phrase' : 'Set Up Life Phrase'}
+                        </h3>
+                        {isSettingUpLifePhrase && masterKey && (
+                          <button
+                            onClick={() => setIsSettingUpLifePhrase(false)}
+                            className="text-gray-500 hover:text-black"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+
+                      <p className="text-sm text-gray-600">
+                        {masterKey
+                          ? 'Enter a new Life Phrase to change your vault access'
+                          : 'Enter your Life Phrase to create or unlock your vault'}
+                      </p>
+
+                      <textarea
+                        value={lifePhraseInput}
+                        onChange={(e) => {
+                          setLifePhraseInput(e.target.value)
+                          setLifePhraseError('')
+                        }}
+                        className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-black transition-colors resize-none h-32"
+                        placeholder="Enter your Life Phrase..."
+                      />
+
+                      {lifePhraseError && (
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                          <p className="text-sm text-red-600">{lifePhraseError}</p>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={handleSetupLifePhrase}
+                        disabled={loading || !lifePhraseInput.trim()}
+                        className="w-full bg-black text-white px-6 py-4 rounded-xl font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {loading ? 'Setting up...' : (masterKey ? 'Change Life Phrase' : 'Set Up Life Phrase')}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setIsSettingUpLifePhrase(true)}
+                      className="w-full bg-black text-white px-6 py-4 rounded-xl font-semibold hover:bg-gray-800 transition-colors inline-flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                      </svg>
+                      Change Life Phrase
+                    </button>
+                  )}
 
                   {/* Security Tips */}
                   <div className="bg-white border border-gray-200 rounded-2xl p-6">
