@@ -32,11 +32,12 @@ export enum SecretType {
 }
 
 // Tier Info (One-Time Payment)
+// Prices in SOL (equivalent to $5, $20, $50 assuming SOL = $150)
 export const TIER_INFO = {
-  [VaultTier.Free]: { name: 'Free', maxSecrets: 1, price: 0 },
-  [VaultTier.Starter]: { name: 'Starter', maxSecrets: 10, price: 5 },
-  [VaultTier.Pro]: { name: 'Pro', maxSecrets: 100, price: 20 },
-  [VaultTier.Ultra]: { name: 'Ultra', maxSecrets: 500, price: 50 },
+  [VaultTier.Free]: { name: 'Free', maxSecrets: 1, price: 0, priceUSD: 0 },
+  [VaultTier.Starter]: { name: 'Starter', maxSecrets: 10, price: 0.033, priceUSD: 5 },
+  [VaultTier.Pro]: { name: 'Pro', maxSecrets: 100, price: 0.133, priceUSD: 20 },
+  [VaultTier.Ultra]: { name: 'Ultra', maxSecrets: 500, price: 0.333, priceUSD: 50 },
 }
 
 /**
@@ -182,6 +183,8 @@ export async function addSecret(
   }
 
   const program = getProgram(wallet)
+  const connection = getConnection()
+  const [configPDA] = deriveConfigPDA()
   const [vaultPDA] = deriveVaultPDA(vaultSeed)
 
   // Get current secret count
@@ -191,6 +194,18 @@ export async function addSecret(
   }
 
   const [secretPDA] = deriveSecretPDA(vaultPDA, vault.secretCount)
+
+  // Get treasury wallet from config
+  let treasuryWallet = new PublicKey('6mLCDN4VkJYqnsrbWf2PWGZkhnRazgudSFknd3AcSFvm') // Default treasury
+  try {
+    const configAccount = await connection.getAccountInfo(configPDA)
+    if (configAccount) {
+      // Parse treasury wallet from config (discriminator 8 bytes + admin 32 bytes + treasury 32 bytes)
+      treasuryWallet = new PublicKey(configAccount.data.slice(40, 72))
+    }
+  } catch (e) {
+    console.log('Using default treasury wallet')
+  }
 
   // Convert secret type to Anchor enum format
   let secretTypeEnum
@@ -208,9 +223,11 @@ export async function addSecret(
       Array.from(nonce)
     )
     .accounts({
+      config: configPDA,
       vault: vaultPDA,
       secret: secretPDA,
       owner: wallet.publicKey,
+      treasury: treasuryWallet,
       systemProgram: web3.SystemProgram.programId,
     })
     .rpc()

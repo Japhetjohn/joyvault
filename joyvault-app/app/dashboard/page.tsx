@@ -19,6 +19,7 @@ export default function Dashboard() {
     getVault,
     getVaultSecrets,
     addVaultSecret,
+    updateVaultSecret,
     deleteVaultSecret,
     upgradeVaultTier,
     createVault,
@@ -46,20 +47,15 @@ export default function Dashboard() {
   const [isSettingUpLifePhrase, setIsSettingUpLifePhrase] = useState(false)
   const [lifePhraseInput, setLifePhraseInput] = useState('')
   const [lifePhraseError, setLifePhraseError] = useState('')
+  const [showLifePhrasePrompt, setShowLifePhrasePrompt] = useState(false)
+  const [lifePhrasePromptAction, setLifePhrasePromptAction] = useState<'view' | 'edit' | null>(null)
+  const [pendingSecretIndex, setPendingSecretIndex] = useState<number | null>(null)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    const masterKeyHex = sessionStorage.getItem('masterKeyHex')
-    const vaultInitialized = sessionStorage.getItem('vaultInitialized')
-
-    if (masterKeyHex && vaultInitialized) {
-      const key = hexToBuffer(masterKeyHex)
-      setMasterKey(key)
-    }
-  }, [])
+  // No sessionStorage reading - Life Phrase must be entered each session for security
 
   useEffect(() => {
     if (masterKey && connected) {
@@ -128,9 +124,7 @@ export default function Dashboard() {
         }
       }
 
-      // Save to sessionStorage
-      sessionStorage.setItem('masterKeyHex', derived.hashHex)
-      sessionStorage.setItem('vaultInitialized', 'true')
+      // Store masterKey in memory only (NOT sessionStorage for security)
       setMasterKey(derived.masterKey)
 
       // Reload vault data
@@ -140,7 +134,7 @@ export default function Dashboard() {
       setIsSettingUpLifePhrase(false)
       setLifePhraseInput('')
       setCurrentView('dashboard')
-      alert('Life Phrase set successfully! You can now add secrets.')
+      alert('Vault unlocked! Your Life Phrase is secure and not saved anywhere.')
     } catch (err) {
       console.error('Failed to setup Life Phrase:', err)
       setLifePhraseError(err instanceof Error ? err.message : 'Failed to setup Life Phrase')
@@ -177,13 +171,108 @@ export default function Dashboard() {
       if (success) {
         setNewSecret({ type: SecretType.Password, title: '', content: '' })
         setIsAddingSecret(false)
+        // Wait a moment for blockchain to confirm before refetching
+        await new Promise(resolve => setTimeout(resolve, 1000))
         await loadVaultData()
+        alert('Secret added successfully!')
       } else {
         alert(error || 'Failed to add secret')
       }
     } catch (err) {
       console.error('Failed to add secret:', err)
       alert(err instanceof Error ? err.message : 'Failed to add secret')
+    }
+  }
+
+  const handleUpdateSecret = async () => {
+    if (!masterKey || !editingSecret) return
+
+    if (!newSecret.content.trim() || !newSecret.title.trim()) {
+      alert('Please fill in all fields')
+      return
+    }
+
+    try {
+      const success = await updateVaultSecret(
+        masterKey,
+        editingSecret.index,
+        newSecret.title,
+        newSecret.content
+      )
+
+      if (success) {
+        setNewSecret({ type: SecretType.Password, title: '', content: '' })
+        setEditingSecret(null)
+        // Wait a moment for blockchain to confirm before refetching
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        await loadVaultData()
+        alert('Secret updated successfully!')
+      } else {
+        alert(error || 'Failed to update secret')
+      }
+    } catch (err) {
+      console.error('Failed to update secret:', err)
+      alert(err instanceof Error ? err.message : 'Failed to update secret')
+    }
+  }
+
+  // Handle Life Phrase verification before viewing/editing
+  const handleVerifyLifePhrase = (action: 'view' | 'edit', secretIndex: number) => {
+    setLifePhrasePromptAction(action)
+    setPendingSecretIndex(secretIndex)
+    setShowLifePhrasePrompt(true)
+  }
+
+  const handleLifePhraseSubmit = async () => {
+    if (!lifePhraseInput.trim()) {
+      setLifePhraseError('Please enter your Life Phrase')
+      return
+    }
+
+    try {
+      setLifePhraseError('')
+      const derived = await deriveKeyFromLifePhrase(lifePhraseInput)
+
+      // Verify it matches the vault
+      const vault = await getVault(derived.masterKey)
+      if (!vault) {
+        setLifePhraseError('Invalid Life Phrase - vault not found')
+        return
+      }
+
+      // Set masterKey temporarily for the operation
+      setMasterKey(derived.masterKey)
+
+      // Execute the pending action
+      if (lifePhrasePromptAction === 'view' && pendingSecretIndex !== null) {
+        // Toggle decrypt after verification
+        const newDecrypted = new Set(decryptedSecrets)
+        if (newDecrypted.has(pendingSecretIndex)) {
+          newDecrypted.delete(pendingSecretIndex)
+        } else {
+          newDecrypted.add(pendingSecretIndex)
+        }
+        setDecryptedSecrets(newDecrypted)
+      } else if (lifePhrasePromptAction === 'edit' && pendingSecretIndex !== null) {
+        // Open edit modal after verification
+        const secret = secrets[pendingSecretIndex]
+        setEditingSecret({ index: pendingSecretIndex, secret })
+        setNewSecret({
+          type: secret.secretType,
+          title: secret.title,
+          content: secret.content
+        })
+      }
+
+      // Clear the prompt
+      setShowLifePhrasePrompt(false)
+      setLifePhraseInput('')
+      setLifePhraseError('')
+      setPendingSecretIndex(null)
+      setLifePhrasePromptAction(null)
+    } catch (err) {
+      setLifePhraseError('Failed to verify Life Phrase')
+      console.error('Life Phrase verification error:', err)
     }
   }
 
@@ -207,6 +296,13 @@ export default function Dashboard() {
   }
 
   const toggleDecrypt = (index: number) => {
+    // If trying to view (decrypt), require Life Phrase verification
+    if (!decryptedSecrets.has(index) && !masterKey) {
+      handleVerifyLifePhrase('view', index)
+      return
+    }
+
+    // If hiding (already decrypted), allow without verification
     const newDecrypted = new Set(decryptedSecrets)
     if (newDecrypted.has(index)) {
       newDecrypted.delete(index)
@@ -623,7 +719,19 @@ export default function Dashboard() {
                         </button>
 
                         <button
-                          onClick={() => setEditingSecret({ index, secret })}
+                          onClick={() => {
+                            // Require Life Phrase verification before editing
+                            if (!masterKey) {
+                              handleVerifyLifePhrase('edit', index)
+                            } else {
+                              setEditingSecret({ index, secret })
+                              setNewSecret({
+                                type: secret.secretType,
+                                title: secret.title,
+                                content: secret.content
+                              })
+                            }
+                          }}
                           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           title="Edit"
                         >
@@ -677,9 +785,13 @@ export default function Dashboard() {
                     <div className="text-center mb-4">
                       <h3 className="text-2xl font-bold text-black mb-2">{tierInfo.name}</h3>
                       <div className="text-3xl font-bold text-black mb-1">
-                        {price === 0 ? 'Free' : `${price} SOL`}
+                        {price === 0 ? 'Free' : `${price.toFixed(3)} SOL`}
                       </div>
-                      {price > 0 && <div className="text-sm text-gray-600">one-time payment</div>}
+                      {price > 0 && (
+                        <div className="text-sm text-gray-600">
+                          ≈ ${tierInfo.priceUSD} • one-time payment
+                        </div>
+                      )}
                     </div>
 
                     <ul className="space-y-3 mb-6">
@@ -734,14 +846,20 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Add Secret Modal - BLACK AND WHITE */}
-      {isAddingSecret && (
+      {/* Add/Edit Secret Modal - BLACK AND WHITE */}
+      {(isAddingSecret || editingSecret) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white border border-gray-200 rounded-3xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl md:text-2xl font-bold text-black">Add New Secret</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-black">
+                {editingSecret ? 'Edit Secret' : 'Add New Secret'}
+              </h2>
               <button
-                onClick={() => setIsAddingSecret(false)}
+                onClick={() => {
+                  setIsAddingSecret(false)
+                  setEditingSecret(null)
+                  setNewSecret({ type: SecretType.Password, title: '', content: '' })
+                }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -793,17 +911,21 @@ export default function Dashboard() {
 
               <div className="flex gap-4 pt-4">
                 <button
-                  onClick={() => setIsAddingSecret(false)}
+                  onClick={() => {
+                    setIsAddingSecret(false)
+                    setEditingSecret(null)
+                    setNewSecret({ type: SecretType.Password, title: '', content: '' })
+                  }}
                   className="flex-1 bg-gray-100 text-black font-semibold py-3 rounded-xl hover:bg-gray-200 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleAddSecret}
+                  onClick={editingSecret ? handleUpdateSecret : handleAddSecret}
                   disabled={loading || !newSecret.title.trim() || !newSecret.content.trim()}
                   className="flex-1 bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Adding...' : 'Save Secret'}
+                  {loading ? (editingSecret ? 'Updating...' : 'Adding...') : (editingSecret ? 'Update Secret' : 'Save Secret')}
                 </button>
               </div>
             </div>
@@ -899,6 +1021,93 @@ export default function Dashboard() {
                   className="flex-1 bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Life Phrase Verification Modal - For viewing/editing secrets */}
+      {showLifePhrasePrompt && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 md:p-8 max-w-md w-full">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-black">Verify Life Phrase</h2>
+              </div>
+              <button
+                onClick={() => {
+                  setShowLifePhrasePrompt(false)
+                  setLifePhraseInput('')
+                  setLifePhraseError('')
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <p className="text-sm text-gray-700">
+                  {lifePhrasePromptAction === 'view'
+                    ? 'Enter your Life Phrase to view this secret'
+                    : 'Enter your Life Phrase to edit this secret'
+                  }
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-black font-semibold mb-2">Life Phrase</label>
+                <textarea
+                  value={lifePhraseInput}
+                  onChange={(e) => {
+                    setLifePhraseInput(e.target.value)
+                    setLifePhraseError('')
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                      handleLifePhraseSubmit()
+                    }
+                  }}
+                  className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-black transition-colors resize-none h-24"
+                  placeholder="Enter your Life Phrase..."
+                  autoFocus
+                />
+                <p className="text-xs text-gray-500 mt-2">Press Ctrl+Enter to submit</p>
+              </div>
+
+              {lifePhraseError && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                  <p className="text-sm text-red-600">{lifePhraseError}</p>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    setShowLifePhrasePrompt(false)
+                    setLifePhraseInput('')
+                    setLifePhraseError('')
+                  }}
+                  className="flex-1 bg-gray-100 text-black font-semibold py-3 rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLifePhraseSubmit}
+                  disabled={!lifePhraseInput.trim()}
+                  className="flex-1 bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Verify
                 </button>
               </div>
             </div>
