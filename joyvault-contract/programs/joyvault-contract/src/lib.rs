@@ -54,6 +54,7 @@ pub mod joyvault_contract {
         nonce: [u8; 12],
     ) -> Result<()> {
         let vault = &mut ctx.accounts.vault;
+        let config = &ctx.accounts.config;
 
         // Check if vault has capacity
         let max_secrets = vault.tier.max_secrets();
@@ -67,6 +68,26 @@ pub mod joyvault_contract {
             ciphertext.len() <= 1024,
             VaultError::SecretTooLarge
         );
+
+        // Charge fee for adding secret (transfer to treasury)
+        let fee_lamports = config.price_per_secret_lamports;
+        if fee_lamports > 0 {
+            let ix = anchor_lang::solana_program::system_instruction::transfer(
+                &ctx.accounts.owner.key(),
+                &config.treasury_wallet,
+                fee_lamports,
+            );
+
+            anchor_lang::solana_program::program::invoke(
+                &ix,
+                &[
+                    ctx.accounts.owner.to_account_info(),
+                    ctx.accounts.treasury.to_account_info(),
+                ],
+            )?;
+
+            msg!("Fee charged: {} lamports", fee_lamports);
+        }
 
         let secret = &mut ctx.accounts.secret;
         secret.vault = vault.key();
@@ -198,6 +219,12 @@ pub struct InitializeVault<'info> {
 #[instruction(secret_type: SecretType)]
 pub struct AddSecret<'info> {
     #[account(
+        seeds = [b"config"],
+        bump = config.bump
+    )]
+    pub config: Account<'info, GlobalConfig>,
+
+    #[account(
         mut,
         has_one = owner,
         seeds = [b"vault", vault.vault_seed.as_ref()],
@@ -220,6 +247,10 @@ pub struct AddSecret<'info> {
 
     #[account(mut)]
     pub owner: Signer<'info>,
+
+    /// CHECK: Treasury wallet from config
+    #[account(mut)]
+    pub treasury: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
 }
